@@ -1,0 +1,119 @@
+/******************************************************************************\
+FILE:           task.zm
+AUTHOR:         Theo Veenker <theo.veenker@beexy.nl>
+ADAPTED BY:     -
+
+DESCRIPTION:
+
+Defines the global procedure for this experiment phase.
+
+
+Global structure of this experiment phase:
+
+  - test part
+      trial
+        subtrial
+
+
+HISTORY:
+2012-02-20 TV   Created.
+2017-05-26 TV   Adapted for Zep 2.0.
+
+\******************************************************************************/
+
+//requires 2.0;
+
+import defs;
+import stimuli;
+import shuffle;
+import output;
+import test_handler;
+
+
+const int   BUTTON_GO    = 0;
+const int   BUTTON_HALT  = 1;
+
+
+Block task
+{
+    Block test
+    {
+        TestItem    item;           // current item
+
+
+        on_event:entry()
+        {
+            // Randomize test items table.
+//            if (shuffle_test_items(selected_group) != OK) terminate;
+
+            num_cycles = test_items[selected_group].size;
+//            num_cycles = 3;
+        }
+
+
+        on_event:exit()
+        {
+            save_trial_data();
+        }
+
+
+        Trial trial
+        {
+            on_event:entry()
+            {
+                item = test_items[selected_group][test.cycle];
+
+                num_cycles = MAX_TEST_SUBTRIALS;
+
+                test_handler.setup();
+            }
+
+
+            on_event:exit()
+            {
+                test_handler.cleanup(event_time);
+
+                // Add new row to output table.
+                TestOutput output;
+                output.trialnum = test.cycle + 1;
+                output.id = item.id;
+                output.type = item.type;
+                output.sndfn = item.sndfn;
+                output.lt = int(control.clock.duration);
+                output.nlt = 
+                    int(control.clock.total_runtime - control.clock.duration);
+                output.lookaways = (control.clock.timestamps.size - 1) / 2;
+                test_output_append(output);
+
+                // Also save look/no-look durations.
+                looknolook_output_append(output.trialnum);
+            }
+
+
+            SubTrial subtrial
+            {
+                on_event:entry()
+                {
+                    test_handler.action(this, item, reference_time);
+                }
+
+
+                on_event:message()
+                {
+                    if (message_arg == TIMEOUT)
+                        trial.leave();
+                    else
+                        leave();
+                }
+            }
+        }
+    }
+}
+
+
+void action(Part caller)
+{
+    // Activate the task. When the task is done, the registered caller
+    // (c.q. the main experiment object) will automatically be signalled.
+    task.enter(caller);
+}

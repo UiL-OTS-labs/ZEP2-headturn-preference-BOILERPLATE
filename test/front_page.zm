@@ -1,0 +1,101 @@
+/******************************************************************************\
+FILE:           front_page.zm
+AUTHOR:         Theo Veenker <theo.veenker@beexy.nl>
+ADAPTED BY:     -
+
+DESCRIPTION:
+
+Provides a page object for presenting the front screen attention getter.
+The attention getter is a size modulated green circle.
+
+HISTORY:
+2017-01-09 TV   Created.
+
+\******************************************************************************/
+
+
+Page front_page
+{
+    init()
+    {
+        fill_pattern_color = TEST_PAGE_COLOR;
+    }
+
+
+    VerticalLayout layout
+    {
+        init()
+        {
+            spacing = 50;
+            height = 0;     // 0 means as large as possible
+        }
+
+
+        CanvasGadget canvas
+        {
+            init()
+            {
+//                fill_pattern_color = TEST_PAGE_STIMULUS_COLOR;
+                size = 400, 400;
+                offset_x = width / 2;
+                offset_y = height / 2;
+            }
+
+
+            CircleShape attention
+            {
+                init()
+                {
+                    radius = 100;
+                    line_width = 10;
+                    line_pattern_color = color:black;
+                    fill_pattern_color = color:lime;
+                }
+
+
+                on_event:pre_start()
+                {
+                    is_visible = true;
+                }
+
+
+                on_event:pre_update()
+                {
+                    real t = real(now() - expected_start_time) / 1e3;
+
+                    // Scaling: 0.5 Hz, 0.25 amplitude
+                    scaling_x = 1 + 0.25 * sin(2.0 * M_PI * 0.5 * t);
+                    scaling_y = scaling_x;
+                }
+            }
+        }
+
+
+        void start_attention_getter()
+        {
+            canvas.attention.start(now());
+        }
+
+
+        void stop_attention_getter()
+        {
+            canvas.attention.abort();
+            canvas.attention.is_visible = false;
+        }
+    }
+
+
+    //==========================================================================
+
+
+    void show_animation()
+    {
+        layout.start_attention_getter();
+    }
+
+
+    void hide_animation()
+    {
+        layout.stop_attention_getter();
+    }
+}

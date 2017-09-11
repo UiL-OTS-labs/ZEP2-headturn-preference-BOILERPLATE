@@ -1,0 +1,117 @@
+/******************************************************************************\
+FILE:           headturn.zp
+EXPERIMENT:     Head-turn Preference Procedure
+AUTHOR:         Theo Veenker <theo.veenker@beexy.nl>
+ADAPTED BY:     -
+
+
+Global structure of experiment:
+
+  - welcome
+
+  - phase 1 (see subfolder familiarization)
+
+  - phase 2 (see subfolder test)
+
+  - thankyou
+
+
+HISTORY:
+2013-07-03 TV   Created.
+2017-01-09 TV   Adapted for Zep 2.0.
+
+\******************************************************************************/
+
+requires 2.0;
+
+import std_baby_windows3;
+import std_entry_page2;
+import std_exit_page2;
+import std_sound_playback;
+//import io_beexybox;         // Enable to use BeexyBox response box.
+//import io_spp;              // Enable to use SPP based response box.
+
+import familiarization::task;
+import test::task;
+
+
+// Experiment version. In piloting stage and later increment this on each
+// relevant change.
+const int EXPERIMENT_VERSION = 1;
+
+
+Experiment experiment
+{
+    on_event:entry()
+    {
+        show_test_windows();
+    }
+
+
+    on_event:message()
+    {
+        // On Ctrl+F4 jump unconditionally to the thank-you part.
+        if (message_sender == control && message_arg == SYS_STOP)
+        {
+            control.mark_experiment_aborted();
+            thankyou.enter();
+        }
+    }
+
+
+    Part welcome
+    {
+        on_event:entry()
+        {
+            // Show nice welcome image to infant.
+            entry_page.add_image(stimuli_dir() + "images/doll.svg");
+            entry_page.action(this);
+            control.enable_button(test::BUTTON_GO);
+        }
+    }
+
+
+    Part phase1
+    {
+        on_event:entry()
+        {
+            familiarization::action(this);
+        }
+    }
+
+
+    Part phase2
+    {
+        on_event:entry()
+        {
+            test::action(this);
+        }
+    }
+
+
+    Part thankyou
+    {
+        on_event:entry()
+        {
+            control.end_experiment();   // Check-in session.
+
+            // Setup a slide show.
+            exit_page.add_image(stimuli_dir() + "images/doll.svg");
+            exit_page.add_image(stimuli_dir() + "images/wagon.svg");
+            exit_page.add_image(stimuli_dir() + "images/fish.svg");
+            exit_page.action(this);
+
+            // In 2s start playing a (baby song) sound file.
+            sound_playback.scaling_all = 1.0;
+            sound_playback.play(stimuli_dir() + "sounds/music.wav", 
+                now() + 2s);
+
+            control.target = this;
+            control.disable_buttons();
+            control.disable_keys();
+//            control.enable_key(KEY_Return);
+//            control.enable_key(' ');
+            control.enable_key(KEY_Escape);
+        }
+    }
+}

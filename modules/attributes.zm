@@ -1,0 +1,106 @@
+/******************************************************************************\
+FILE:           attributes.zm
+AUTHOR:         ZepMan 1.0.5
+ADAPTED BY:     -
+
+DESCRIPTION:
+
+Defines attributes for researcher, participant, experiment, group and session
+records in the database. This is used only when running the script with plain
+Zep on the command line. Under ZepMan you can perform the same action from the
+menu: Script -> Define Attributes
+
+If you run the experiment script stand-alone (that is without ZepMan) then
+defining participant attributes also requires modules/participant.zm in which
+concrete participant attribute fields are added to the participant record.
+The similar applies for researcher, experiment and group.
+
+\******************************************************************************/
+
+
+// Attribute definitions to be used for participant records.
+FieldDefInit[] participant_attribute_defs =
+{
+    {
+        // Attribute id.
+        "sex",
+
+        // Attribute type.
+        FIELD_TYPE_ENUM,
+
+        // Attribute description.
+        "Biological or physiological sex",
+
+        // Set if attribute may identify a person.
+        false,
+
+        // Set if attribute may contain sentitive information.
+        false,
+
+        // Set to exclude attribute from export.
+        false,
+
+        // Set to show attribute in zepman record list.
+        true,
+
+        // Set if attribute is required for experiment.
+        true,
+
+        // Enumerator list.
+        "male|female"
+    },
+    {
+        // Attribute id.
+        "birthdate",
+
+        // Attribute type.
+        FIELD_TYPE_DATE,
+
+        // Attribute description.
+        "Date of birth",
+
+        // Set if attribute may identify a person.
+        false,
+
+        // Set if attribute may contain sentitive information.
+        false,
+
+        // Set to exclude attribute from export.
+        false,
+
+        // Set to show attribute in zepman record list.
+        false,
+
+        // Set if attribute is required for experiment.
+        true,
+
+        // Not used.
+        ""
+    },
+}
+
+
+// Attribute definitions to be used for session records. Session record
+// attributes serve as experiment script arguments.
+FieldDefInit[] session_attribute_defs =
+{
+}
+
+
+// Attribute definitions to be used for group records. Group record attributes
+// could be used to specify the levels of between-subjects factors.
+FieldDefInit[] group_attribute_defs =
+{
+}
+
+
+// Attribute definitions to be used for experiment records.
+FieldDefInit[] experiment_attribute_defs =
+{
+}
+
+
+// Attribute definitions to be used for researcher records.
+FieldDefInit[] researcher_attribute_defs =
+{
+}

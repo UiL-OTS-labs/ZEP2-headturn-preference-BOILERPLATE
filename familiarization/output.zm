@@ -1,0 +1,85 @@
+/******************************************************************************\
+FILE:           output.zm
+AUTHOR:         Theo Veenker <theo.veenker@beexy.nl>
+ADAPTED BY:     -
+
+DESCRIPTION:
+
+Defines the formats of output table(s).
+
+
+HISTORY:
+2012-02-20 TV   Created.
+2017-05-26 TV   Adapted for Zep 2.0.
+
+\******************************************************************************/
+
+
+// Familiarization output table record. If you change this then also update
+// corresponding output function below and rerun the experiment (once)
+// in PREPARING mode, or alternatively manually make the required changes
+// to the table column definitions using ZepMan.
+record FamOutput
+{
+    int         lt;             // looking time [ms]
+    int         nlt;            // not looking time [ms]
+    int         lookaways;      // number of times looked away
+}
+
+
+//------------------------------------------------------------------------------
+
+
+// Appends one row of data to familiarization output table.
+void fam_output_append(FamOutput data)
+{
+    // Create new trial data record. The title (final argument) is optional
+    // but recommended.
+    expdb.add_trial_data_record(namespace_name, "1",
+        "Familiarization results");
+
+    // Set column values of the trial data record. The descriptions (final
+    // arguments) are optional but recommended.
+
+    expdb.set_trial_data_int_field("lt", data.lt,
+        "looking time [ms]");
+
+    expdb.set_trial_data_int_field("nlt", data.nlt,
+        "not looking time [ms]");
+
+    expdb.set_trial_data_int_field("lookaways", data.lookaways,
+        "number of times looked away");
+}
+
+
+// Appends array of looking/not-looking times to look-nolook output table.
+void looknolook_output_append(int trialnum)
+{
+    int nstamps = control.clock.timestamps.size - 1;
+
+    int i;
+    while (i < nstamps)
+    {
+        // Create new trial data record. The title (final argument) is optional
+        // but recommended.
+        expdb.add_trial_data_record(namespace_name, "2",
+            "Looking/not-looking results (familiarization)");
+
+        time lasttimestamp = control.clock.timestamps[i];
+
+        // Set column values of the trial data record. The descriptions (final
+        // arguments) are optional but recommended.
+
+        expdb.set_trial_data_int_field("trialnum", trialnum,
+            "trial number");
+
+        expdb.set_trial_data_int_field("d",
+            int(control.clock.timestamps[i+1] - lasttimestamp),
+            "duration (looking or not looking)");
+
+        expdb.set_trial_data_enum_field("label", (i & 1) ? "NL" : "L",
+            "L:looking, NL:not looking");
+
+        i++;
+    }
+}

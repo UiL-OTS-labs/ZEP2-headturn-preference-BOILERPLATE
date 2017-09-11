@@ -1,0 +1,25 @@
+/******************************************************************************\
+FILE:           defs.zm
+AUTHOR:         Theo Veenker <theo.veenker@beexy.nl>
+ADAPTED BY:     -
+
+DESCRIPTION:
+
+Defines experiment settings such as for trial timing.
+
+
+HISTORY:
+2012-02-20 TV   Created.
+2017-05-26 TV   Adapted for Zep 2.0.
+
+\******************************************************************************/
+
+
+// Maximum number of successive visual stimuli to appear on the same side.
+const int       MAX_SAME_SIDE                   = 2;
+
+// Maximum duration the child may look away.
+const dur       MAX_LOOKAWAY_DURATION           = 2000ms;
+
+// Duration of the interval between two subtrials.
+const dur       INTERSTIMULUS_INTERVAL          = 750ms;
