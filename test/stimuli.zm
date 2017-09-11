@@ -34,12 +34,8 @@ record TestItem
 
 
 // Test item table.
-//   index 1: group
-//   index 2: item number
-TestItem[][] test_items =
+TestItem[] test_items =
 {
-    // items for ORDER1 group
-    {
         {1,     FAMIL,  "sen1.wav"},
         {2,     FAMIL,  "sen2.wav"},
         {3,     FAMIL,  "sen3.wav"},
@@ -50,44 +46,4 @@ TestItem[][] test_items =
         {8,     NOVEL,  "saen3.wav"},
         {9,     NOVEL,  "saen4.wav"},
         {10,    NOVEL,  "saen5.wav"},
-    },
-    // items for ORDER2 group
-    {
-        {1,     FAMIL,  "sen1.wav"},
-        {2,     FAMIL,  "sen2.wav"},
-        {3,     FAMIL,  "sen3.wav"},
-        {4,     FAMIL,  "sen4.wav"},
-        {5,     FAMIL,  "sen5.wav"},
-        {6,     NOVEL,  "saen1.wav"},
-        {7,     NOVEL,  "saen2.wav"},
-        {8,     NOVEL,  "saen3.wav"},
-        {9,     NOVEL,  "saen4.wav"},
-        {10,    NOVEL,  "saen5.wav"},
-    },
-    // items for ORDER3 group
-    {
-        {1,     FAMIL,  "sen1.wav"},
-        {2,     FAMIL,  "sen2.wav"},
-        {3,     FAMIL,  "sen3.wav"},
-        {4,     FAMIL,  "sen4.wav"},
-        {5,     FAMIL,  "sen5.wav"},
-        {6,     NOVEL,  "saen1.wav"},
-        {7,     NOVEL,  "saen2.wav"},
-        {8,     NOVEL,  "saen3.wav"},
-        {9,     NOVEL,  "saen4.wav"},
-        {10,    NOVEL,  "saen5.wav"},
-    },
-    // items for ORDER4 group
-    {
-        {1,     FAMIL,  "sen1.wav"},
-        {2,     FAMIL,  "sen2.wav"},
-        {3,     FAMIL,  "sen3.wav"},
-        {4,     FAMIL,  "sen4.wav"},
-        {5,     FAMIL,  "sen5.wav"},
-        {6,     NOVEL,  "saen1.wav"},
-        {7,     NOVEL,  "saen2.wav"},
-        {8,     NOVEL,  "saen3.wav"},
-        {9,     NOVEL,  "saen4.wav"},
-        {10,    NOVEL,  "saen5.wav"},
-    },
 };

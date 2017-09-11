@@ -43,10 +43,7 @@ Block task
 
         on_event:entry()
         {
-            // Randomize test items table.
-//            if (shuffle_test_items(selected_group) != OK) terminate;
-
-            num_cycles = test_items[selected_group].size;
+            num_cycles = test_items.size;
         }
 
 
@@ -60,7 +57,7 @@ Block task
         {
             on_event:entry()
             {
-                item = test_items[selected_group][test.cycle];
+                item = test_items[test.cycle];
 
                 num_cycles = MAX_TEST_SUBTRIALS;
 
