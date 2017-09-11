@@ -30,8 +30,8 @@ import output;
 import test_handler;
 
 
-const int   BUTTON_GO    = 0;
-const int   BUTTON_HALT  = 1;
+const int   BUTTON_GO    = 2;
+const int   BUTTON_HALT  = 0;
 
 
 Block task
@@ -47,7 +47,6 @@ Block task
 //            if (shuffle_test_items(selected_group) != OK) terminate;
 
             num_cycles = test_items[selected_group].size;
-//            num_cycles = 3;
         }
 
 
@@ -80,7 +79,7 @@ Block task
                 output.type = item.type;
                 output.sndfn = item.sndfn;
                 output.lt = int(control.clock.duration);
-                output.nlt = 
+                output.nlt =
                     int(control.clock.total_runtime - control.clock.duration);
                 output.lookaways = (control.clock.timestamps.size - 1) / 2;
                 test_output_append(output);
