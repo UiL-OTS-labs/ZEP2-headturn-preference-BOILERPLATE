@@ -16,7 +16,7 @@ HISTORY:
 
 
 // Shuffles fam_items table (no restrictions on item order).
-int shuffle_fam_items()
+int shuffle_stimulus_list()
 {
     fam_items.shuffle(0, -1);
 

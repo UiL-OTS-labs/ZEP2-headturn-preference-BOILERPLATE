@@ -84,11 +84,17 @@ void bootstrap_stimulus_lists()
     // Check the familiarization list
     err += check_stimuli_list(familiarization::fam_items);
 
+    // Shuffle the list
+    err += familiarization::shuffle_stimulus_list();
+
     // Read Test stimuli list
     err += read_stimuli_list(test::test_items, "test_items.csv");
 
     // Check the test list
     err += check_stimuli_list(test::test_items);
+
+    // Shuffle the list
+    err += test::shuffle_stimulus_list();
 
     if(err != 0 || error())
     {

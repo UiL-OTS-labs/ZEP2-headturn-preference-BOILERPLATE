@@ -40,11 +40,7 @@ Block task
 
         on_event:entry()
         {
-            // Randomize familiarization items table.
-            if (shuffle_fam_items() != OK) terminate;
-
             num_cycles = fam_items.size;
-//            num_cycles = 3;
 
             fam_handler.setup();
         }
