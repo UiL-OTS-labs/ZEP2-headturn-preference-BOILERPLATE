@@ -12,7 +12,7 @@ const int CTRL_WINDOW_TARGET_HEAD = 0;
 // CTRL_WINDOW target head.
 
 // Front Monitor/Display/Screen
-const int TEST_WINDOW1_TARGET_HEAD = 1;
+const int TEST_WINDOW1_TARGET_HEAD = 4;
 
 // Left Monitor/Display/Screen
 const int TEST_WINDOW2_TARGET_HEAD = 2;
