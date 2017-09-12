@@ -33,6 +33,8 @@ import test_handler;
 const int   BUTTON_GO    = 2;
 const int   BUTTON_HALT  = 0;
 
+// Test item table.
+TestItem[..] test_items;
 
 Block task
 {

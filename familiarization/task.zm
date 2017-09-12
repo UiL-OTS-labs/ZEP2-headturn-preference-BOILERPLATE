@@ -28,6 +28,8 @@ import shuffle;
 import output;
 import fam_handler;
 
+// Familiarization item table.
+TestItem[..] fam_items;
 
 Block task
 {
@@ -55,7 +57,7 @@ Block task
             // Add new row to output table.
             FamOutput output;
             output.lt = int(control.clock.duration);
-            output.nlt = 
+            output.nlt =
                 int(control.clock.total_runtime - control.clock.duration);
             output.lookaways = (control.clock.timestamps.size - 1) / 2;
             fam_output_append(output);
@@ -73,9 +75,9 @@ Block task
             {
                 item = fam_items[familiarization.cycle];
 
-                // A familiarization trial is the presentation of one 
-                // stimulus. The contingency procedure for the lights 
-                // starts at trial 1 and runs independently from the 
+                // A familiarization trial is the presentation of one
+                // stimulus. The contingency procedure for the lights
+                // starts at trial 1 and runs independently from the
                 // auditory stimuli.
                 fam_handler.action(this, item, reference_time);
             }

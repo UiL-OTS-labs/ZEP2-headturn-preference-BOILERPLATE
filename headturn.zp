@@ -28,6 +28,7 @@ import std_baby_windows3;
 import std_entry_page2;
 import std_exit_page2;
 import std_sound_playback;
+import stimuli;
 import io_beexybox;         // Enable to use BeexyBox response box.
 //import io_spp;              // Enable to use SPP based response box.
 
@@ -44,9 +45,10 @@ Experiment experiment
 {
     on_event:entry()
     {
-        show_test_windows();
-    }
+        stimuli::bootstrap_stimulus_lists();
 
+        if(control.state == CONTROL_RUNNING && !error()) show_test_windows();
+    }
 
     on_event:message()
     {
@@ -57,7 +59,6 @@ Experiment experiment
             thankyou.enter();
         }
     }
-
 
     Part welcome
     {
@@ -103,7 +104,7 @@ Experiment experiment
 
             // In 2s start playing a (baby song) sound file.
             sound_playback.scaling_all = 1.0;
-            sound_playback.play(stimuli_dir() + "sounds/music.wav", 
+            sound_playback.play(stimuli_dir() + "sounds/music.wav",
                 now() + 2s);
 
             control.target = this;

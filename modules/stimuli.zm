@@ -1,0 +1,99 @@
+/******************************************************************************\
+FILE:           stimuli.zm
+AUTHOR:         Theo Veenker <theo.veenker@beexy.nl>
+ADAPTED BY:     -
+
+DESCRIPTION:
+
+Defines the formats of item table(s) and provides the actual content of
+the item table(s) i.e. stimulus information.
+
+
+HISTORY:
+2012-02-20 TV   Created.
+2017-05-26 TV   Adapted for Zep 2.0.
+
+\******************************************************************************/
+
+plugin zep_file;
+
+// Symbolic definition of item type.
+enum ItemType
+{
+    FAMIL,                        // familiar item
+    NOVEL,                        // novel item
+}
+
+
+// Item table record.
+record TestItem
+{
+    int         id;             // item id
+    ItemType    type;           // item type
+    string      sndfn;          // stimulus sound file
+}
+
+// Loads item table(s) from CSV file(s) in the stimuli folder.
+int read_stimuli_list(TestItem[] target, string filename, bool skip_header_row = true, int skip_lines_before_header = 1)
+{
+	// Load data into test_prac_items table.
+    target.load(stimuli_dir() + filename,
+        skip_header_row,           // if true, file contains a header row
+        skip_lines_before_header);             // number of lines to skip before header and data
+    if( error() )
+    {
+        print_error("Something went wrong when trying to read a stimulus list from the file " + stimuli_dir() + filename);
+        return ERROR;
+    }
+
+    return OK;
+}
+
+int check_stimuli_list(TestItem[] stimuli_list)
+{
+    // List is not supposed to be empty
+    if(stimuli_list.size == 0)
+    {
+        ctrl_window.show_error("A stimulus list is empty");
+        return ERROR;
+    }
+
+
+    int index = 0;
+    while( index < stimuli_list.size )
+    {
+        string full_filename = stimuli_dir() + "sounds/" + stimuli_list[index].sndfn;
+        if( !file_readable(full_filename) )
+        {
+            ctrl_window.show_error("Soundfile '" + stimuli_list[index].sndfn + "' is not readable. Does it exist?");
+            return ERROR;
+        }
+        index = index + 1;
+    }
+
+    return OK;
+}
+
+void bootstrap_stimulus_lists()
+{
+    int err = 0;
+
+    // Read familiarization stimuli list
+    err += read_stimuli_list(familiarization::fam_items, "familiarization_items.csv");
+
+    // Check the familiarization list
+    err += check_stimuli_list(familiarization::fam_items);
+
+    // Read Test stimuli list
+    err += read_stimuli_list(test::test_items, "test_items.csv");
+
+    // Check the test list
+    err += check_stimuli_list(test::test_items);
+
+    if(err != 0 || error())
+    {
+        flush_error();
+        control.end_experiment(true); // abort
+    }
+
+}
