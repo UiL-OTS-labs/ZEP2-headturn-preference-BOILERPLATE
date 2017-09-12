@@ -1,0 +1,2250 @@
+/******************************************************************************\
+FILE:           std_baby_control.zm
+AUTHOR:         Theo Veenker <theo.veenker@beexy.nl>
+ADAPTED BY:     -
+
+DESCRIPTION:
+
+Provides the experiment control page for babylab experiments. It contains a
+canvas area (for displaying symbols representing lights and speakers and a
+counter), an information area and a row of buttons.
+
+The canvas area background color is supposed to act as a chroma key color
+allowing the control window to be used as an overlay on the camera video.
+
+HISTORY:
+2017-01-01 TV   Initial version for Zep 2.0
+
+\******************************************************************************/
+
+
+import std_display;
+import std_defs;
+import std_baby_control_colors;
+import std_baby_control_fonts;
+import std_res_browser;
+import std_res_editor;
+import std_res_new;
+import std_pp_browser;
+import std_pp_editor;
+import std_pp_new;
+import std_exp_editor;
+import std_exp_kickoff;
+import std_database;
+import std_options;
+
+
+// Database folder name. Don't change.
+const string    DATABASE_DIR    = "db";
+
+
+// Error value returned when attempting to check out a locked database record.
+const int       RECORD_LOCKED   = -2;
+
+
+// LED animation update interval.
+dur ANIM_UPDATE_INTERVAL        = 200ms;
+
+
+// Enumeration of experiment control interface states.
+enum ControlState
+{
+    CONTROL_IDLE,               // idle
+    CONTROL_READY,              // interface initialized
+    CONTROL_RES_EDIT,           // entering/editing researcher record
+    CONTROL_PP_EDIT,            // entering/editing participant record
+    CONTROL_EXP_EDIT,           // entering/editing experiment record
+    CONTROL_GRP_EDIT,           // entering/editing experiment group record
+    CONTROL_SES_EDIT,           // entering/editing experiment session record
+    CONTROL_KICKOFF,            // in experiment kick-off dialog
+    CONTROL_RUNNING,            // experiment running
+    CONTROL_ABORTED,            // experimenter activated quit
+    CONTROL_FINISHED            // experiment finished (normally or aborted)
+}
+
+
+enum ClockState
+{
+    CLOCK_IDLE,                 // idle
+    CLOCK_READY,                // waiting to be started
+    CLOCK_RUNNING,              // running
+    CLOCK_PAUSED,               // paused
+    CLOCK_FINISHED              // done
+}
+
+
+// Enumeration of directions (or-able) stimulus is coming from.
+enum Direction
+{
+    FRONT_SIDE  = 1,            // front side
+    LEFT_SIDE   = 2,            // left side (from camera POV)
+    RIGHT_SIDE  = 4             // right side (from camera POV)
+}
+
+
+// Record for mapping key/button values to integer codes.
+record KeyCodeMapping
+{
+    int         key;            // key/button value
+    int         code;           // code to be produced for key/button
+}
+
+
+Page control
+{
+    ControlState state;         // experiment control state (see above)
+    string      ppid;           // participant id
+    string      resid;          // researcher id
+
+    int         lightsmask;     // current lights on/off mask (see Direction)
+    int         lightspattern;  // lights pattern number
+
+    KeyCodeMapping[] keymap = {}; // key to code mappings
+    KeyCodeMapping[] btnmap = {}; // button to code mappings
+
+
+    post_init()
+    {
+        if (begin() != OK)
+        {
+            expdb.close();
+            terminate;
+        }
+    }
+
+
+    on_event:close()
+    {
+        signal(ctrl_window, SYS_QUIT);
+    }
+
+
+    on_event:key_press()
+    {
+        handle_key(ctrl_window, input_key, input_modifiers);
+    }
+
+
+    on_event:message()
+    {
+        if (state == CONTROL_RES_EDIT)
+        {
+            state = CONTROL_READY;
+            if (message_arg == SYS_CONTINUE)
+                resid = res_browser.resid;
+            show_researcher_info();
+        }
+        else if (state == CONTROL_PP_EDIT)
+        {
+            state = CONTROL_READY;
+            if (message_arg == SYS_CONTINUE)
+                ppid = pp_browser.ppid;
+            show_participant_info();
+        }
+        else if (state == CONTROL_EXP_EDIT)
+        {
+            state = CONTROL_READY;
+            show_experiment_info();
+        }
+        else if (state == CONTROL_KICKOFF)
+        {
+            if (message_arg == SYS_CONTINUE)
+                really_begin_experiment();
+            else if (message_arg == SYS_CANCEL)
+                cancel_begin_experiment();
+        }
+        else if (state >= CONTROL_RUNNING)
+        {
+            if (message_arg == SYS_FINISH) // Sent on exit by experiment object.
+            {
+                end_experiment();       // Check-in session if not yet done.
+                terminate;
+            }
+            else if (message_arg == SYS_UPDATE)
+            {
+                if (message_arg2 == 0)
+                    show_state_info();
+                else
+                    clear_state_info();
+            }
+        }
+    }
+
+
+    VerticalLayout layout
+    {
+        LabelGadget[] partnames = {};   // label gadgets for part names
+        LabelGadget[] partvalues = {};  // label gadgets for part counters
+
+
+        init()
+        {
+            spacing = 0;
+            options = LAYOUT_ATTACH_LEFT | LAYOUT_ATTACH_RIGHT;
+            fill_pattern_color = CONTROL_COLOR;
+            min_width = 700;
+            min_height = 600;
+
+            partnames.size = 6;
+            partnames[0] = info2.state1lab;
+            partnames[1] = info2.state2lab;
+            partnames[2] = info2.state3lab;
+            partnames[3] = info2.state4lab;
+            partnames[4] = info2.state5lab;
+            partnames[5] = info2.state6lab;
+            partvalues.size = 6;
+            partvalues[0] = info2.state1;
+            partvalues[1] = info2.state2;
+            partvalues[2] = info2.state3;
+            partvalues[3] = info2.state4;
+            partvalues[4] = info2.state5;
+            partvalues[5] = info2.state6;
+        }
+
+
+        CanvasGadget canvas
+        {
+            init()
+            {
+                fill_pattern_color = CONTROL_CANVAS_COLOR;
+            }
+
+
+            on_event:resize()
+            {
+                front_light_icon.offset_x = actual_width / 2;
+                front_light_icon.offset_y = 75;
+                left_light_icon.offset_x = 75;
+                left_light_icon.offset_y = actual_height / 2;
+                right_light_icon.offset_x = actual_width - 75;
+                right_light_icon.offset_y = actual_height / 2;
+
+                front_speaker_icon.offset_x = front_light_icon.offset_x;
+                front_speaker_icon.offset_y = front_light_icon.offset_y + 80;
+                left_speaker_icon.offset_x = left_light_icon.offset_x;
+                left_speaker_icon.offset_y = left_light_icon.offset_y + 100;
+                right_speaker_icon.offset_x = right_light_icon.offset_x;
+                right_speaker_icon.offset_y = right_light_icon.offset_y + 100;
+
+                counter_active.offset_x = actual_width / 4 * 3;
+                counter_active.offset_y = front_light_icon.offset_y;
+
+                counter.offset_x = actual_width - 50;
+                counter.offset_y = 50;
+            }
+
+
+            CircleShape front_light_icon
+            {
+                init()
+                {
+                    radius = 30;
+                    fill_pattern_color = CONTROL_FRONT_LIGHT_COLOR;
+                }
+            }
+
+
+            CircleShape left_light_icon
+            {
+                init()
+                {
+                    radius = 30;
+                    fill_pattern_color = CONTROL_SIDE_LIGHT_COLOR;
+                }
+            }
+
+
+            CircleShape right_light_icon
+            {
+                init()
+                {
+                    radius = 30;
+                    fill_pattern_color = CONTROL_SIDE_LIGHT_COLOR;
+                }
+            }
+
+
+            PolygonShape front_speaker_icon
+            {
+                init()
+                {
+                    num_points = 6;
+                    point[0] = -20, -20;
+                    point[1] = 20, -20;
+                    point[2] = 20, 0;
+                    point[3] = 40, 20;
+                    point[4] = -40, 20;
+                    point[5] = -20, 0;
+                    fill_pattern_color = CONTROL_SPEAKER_COLOR;
+                }
+            }
+
+
+            PolygonShape left_speaker_icon
+            {
+                init()
+                {
+                    num_points = 6;
+                    point[0] = -20, -20;
+                    point[1] = 20, -20;
+                    point[2] = 20, 0;
+                    point[3] = 40, 20;
+                    point[4] = -40, 20;
+                    point[5] = -20, 0;
+                    rotation = -M_PI / 2;
+                    fill_pattern_color = CONTROL_SPEAKER_COLOR;
+                }
+            }
+
+
+            PolygonShape right_speaker_icon
+            {
+                init()
+                {
+                    num_points = 6;
+                    point[0] = -20, -20;
+                    point[1] = 20, -20;
+                    point[2] = 20, 0;
+                    point[3] = 40, 20;
+                    point[4] = -40, 20;
+                    point[5] = -20, 0;
+                    rotation = M_PI / 2;
+                    fill_pattern_color = CONTROL_SPEAKER_COLOR;
+                }
+            }
+
+
+            CircleShape counter_active
+            {
+                init()
+                {
+                    radius = 15;
+                    fill_pattern_color = CONTROL_COUNTER_COLOR;
+                }
+            }
+
+
+            TextShape counter
+            {
+                init()
+                {
+                    font_family = CONTROL_COUNTER_FONT_FAMILY;
+                    font_size = CONTROL_COUNTER_FONT_SIZE;
+                    hor_alignment = ALIGN_END;
+                    line_pattern_color = CONTROL_COUNTER_COLOR;
+                    is_visible = true;
+                }
+            }
+        }
+
+
+        HorGridLayout info1
+        {
+            init()
+            {
+                left_margin = 4;
+                top_margin = 4;
+                wrap_count = 8;
+                options = LAYOUT_EQUAL_WIDTH | LAYOUT_STRETCH_ITEMS_HOR;
+                height = -1;
+                fill_pattern_color = CONTROL_INFO_COLOR;
+            }
+
+
+            LabelGadget
+            {
+                init()
+                {
+                    text = "experiment:";
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_INFO_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget experiment
+            {
+                init()
+                {
+                    text = script_name();
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_INFO_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget
+            {
+                init()
+                {
+                    text = "status:";
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_INFO_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget expstatus
+            {
+                init()
+                {
+                    text = "-";
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_INFO_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget
+            {
+                init()
+                {
+                    text = "researcher:";
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_INFO_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget researcher
+            {
+                init()
+                {
+                    text = "-";
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_INFO_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget
+            {
+                init()
+                {
+                    text = "participant:";
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_INFO_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget participant
+            {
+                init()
+                {
+                    text = "-";
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_INFO_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget
+            {
+                init()
+                {
+                    text = "group:";
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_INFO_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget group
+            {
+                init()
+                {
+                    text = "-";
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_INFO_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget
+            {
+                init()
+                {
+                    text = "session:";
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_INFO_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget session
+            {
+                init()
+                {
+                    text = "-";
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_INFO_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+        }
+
+
+        HorGridLayout info2
+        {
+            init()
+            {
+                left_margin = 4;
+                top_margin = 4;
+                wrap_count = 8;
+                options = LAYOUT_EQUAL_WIDTH | LAYOUT_STRETCH_ITEMS_HOR;
+                height = -1;
+                fill_pattern_color = CONTROL_INFO_COLOR;
+            }
+
+
+            LabelGadget state1lab
+            {
+                init()
+                {
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_STATE_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget state1
+            {
+                init()
+                {
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_INFO_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget state2lab
+            {
+                init()
+                {
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_STATE_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget state2
+            {
+                init()
+                {
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_INFO_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget state3lab
+            {
+                init()
+                {
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_STATE_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget state3
+            {
+                init()
+                {
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_INFO_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget state4lab
+            {
+                init()
+                {
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_STATE_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget state4
+            {
+                init()
+                {
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_INFO_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget state5lab
+            {
+                init()
+                {
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_STATE_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget state5
+            {
+                init()
+                {
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_INFO_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget state6lab
+            {
+                init()
+                {
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_STATE_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+
+
+            LabelGadget state6
+            {
+                init()
+                {
+                    font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                    font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                    text_color = CONTROL_INFO_TEXT_COLOR;
+                    is_wrapping = false;
+                    hor_alignment = ALIGN_BEGIN;
+                    ver_alignment = ALIGN_BEGIN;
+                }
+            }
+        }
+
+
+        LabelGadget status
+        {
+            init()
+            {
+                margin = 4;
+                font_family = CONTROL_MAIN_INFO_FONT_FAMILY;
+                font_size = CONTROL_MAIN_INFO_FONT_SIZE;
+                fill_pattern_color = CONTROL_INFO_COLOR;
+                text_color = CONTROL_STATUS_TEXT_COLOR;
+                is_wrapping = false;
+                hor_alignment = ALIGN_BEGIN;
+                ver_alignment = ALIGN_BEGIN;
+                height = -1;
+            }
+        }
+
+
+        HorizontalLayout buttons
+        {
+            init()
+            {
+                left_margin = 4;
+                right_margin = 4;
+                top_margin = 8;
+                bottom_margin = 4;
+                spacing = 8;
+                height = -1;
+            }
+
+
+            ButtonGadget experiment
+            {
+                init()
+                {
+                    text = "Experiment";
+                    font_family = CONTROL_BUTTON_FONT_FAMILY;
+                    font_size = CONTROL_BUTTON_FONT_SIZE;
+                    fill_pattern_color = CONTROL_BUTTON_COLOR;
+                    text_color = CONTROL_BUTTON_TEXT_COLOR;
+                    margin = 5;
+                    border = 4;
+//                    is_focusable = true;
+                }
+
+
+                on_event:activate()
+                {
+                    if (state != CONTROL_READY) return;
+
+                    state = CONTROL_EXP_EDIT;
+
+                    exp_editor.action(control);
+                }
+            }
+
+
+            ButtonGadget researcher
+            {
+                init()
+                {
+                    text = "Researcher";
+                    font_family = CONTROL_BUTTON_FONT_FAMILY;
+                    font_size = CONTROL_BUTTON_FONT_SIZE;
+                    fill_pattern_color = CONTROL_BUTTON_COLOR;
+                    text_color = CONTROL_BUTTON_TEXT_COLOR;
+                    margin = 5;
+                    border = 4;
+//                    is_focusable = true;
+                }
+
+
+                on_event:activate()
+                {
+                    if (state != CONTROL_READY) return;
+
+                    state = CONTROL_RES_EDIT;
+
+                    res_browser.action(resid, control);
+                }
+            }
+
+
+            ButtonGadget participant
+            {
+                init()
+                {
+                    text = "Participant";
+                    font_family = CONTROL_BUTTON_FONT_FAMILY;
+                    font_size = CONTROL_BUTTON_FONT_SIZE;
+                    fill_pattern_color = CONTROL_BUTTON_COLOR;
+                    text_color = CONTROL_BUTTON_TEXT_COLOR;
+                    margin = 5;
+                    border = 4;
+//                    is_focusable = true;
+                }
+
+
+                on_event:activate()
+                {
+                    if (state != CONTROL_READY) return;
+
+                    state = CONTROL_PP_EDIT;
+
+                    pp_browser.action(ppid, control);
+                }
+            }
+
+
+            Spacer spacer
+            {
+            }
+
+
+            ButtonGadget help
+            {
+                init()
+                {
+                    text = "Help";
+                    font_family = CONTROL_BUTTON_FONT_FAMILY;
+                    font_size = CONTROL_BUTTON_FONT_SIZE;
+                    fill_pattern_color = CONTROL_BUTTON_COLOR;
+                    text_color = CONTROL_BUTTON_TEXT_COLOR;
+                    margin = 5;
+                    border = 4;
+//                    is_focusable = true;
+                }
+
+
+                on_event:activate()
+                {
+                    ctrl_window.show_help();
+                }
+            }
+
+
+            ButtonGadget startexp
+            {
+                init()
+                {
+                    text = "Start";
+                    font_family = CONTROL_BUTTON_FONT_FAMILY;
+                    font_size = CONTROL_BUTTON_FONT_SIZE;
+                    fill_pattern_color = CONTROL_BUTTON_COLOR;
+                    text_color = CONTROL_BUTTON_TEXT_COLOR;
+                    margin = 5;
+                    border = 4;
+//                    is_focusable = true;
+                }
+
+
+                on_event:activate()
+                {
+                    if (state != CONTROL_READY) return;
+
+                    confirm_begin_experiment();
+                }
+            }
+
+
+            ButtonGadget quitexp
+            {
+                init()
+                {
+                    text = "Quit";
+                    font_family = CONTROL_BUTTON_FONT_FAMILY;
+                    font_size = CONTROL_BUTTON_FONT_SIZE;
+                    fill_pattern_color = CONTROL_BUTTON_COLOR;
+                    text_color = CONTROL_BUTTON_TEXT_COLOR;
+                    margin = 5;
+                    border = 4;
+//                    is_focusable = true;
+                }
+
+
+                on_event:activate()
+                {
+                    signal(ctrl_window, SYS_QUIT);
+                }
+            }
+        }
+    }
+
+
+    void toggle_thumbnail_quality()
+    {
+        // Not implemented.
+    }
+
+
+    void toggle_thumbnail(Window win1, Window win2=null, Window win3=null)
+    {
+        // Not implemented.
+    }
+
+
+    void show_state_info()
+    {
+        // Show where we are in main "experiment" object.
+        int nlabels = layout.partnames.size;
+        int nlevels = experiment.num_levels;
+        int n;
+        int m = 1;
+        while (n < nlabels)
+        {
+            if (m >= nlevels) break;
+            int ncycles = experiment.level_num_cycles(m-1);
+            int cycle = experiment.level_cycle(m-1);
+            if (ncycles > 1)
+            {
+                layout.partnames[n].text = experiment.level_part_name(m) + ":";
+                layout.partvalues[n].text =
+                    string(cycle+1) + "/" + string(ncycles);
+            }
+            else if (ncycles < 0)
+            {
+                layout.partnames[n].text = experiment.level_part_name(m) + ":";
+                layout.partvalues[n].text = string(cycle+1);
+            }
+            else
+            {
+                layout.partnames[n].text = experiment.level_part_name(m);
+                layout.partvalues[n].text = "";
+            }
+            n++;
+            m++;
+        }
+
+        // Also show where we are in the current sub-experiment if defined.
+        PartList subexp = experiment.connected;
+        if (subexp != null)
+        {
+            nlevels = subexp.num_levels;
+            m = 1;
+            while (n < nlabels)
+            {
+                if (m >= nlevels) break;
+                int ncycles = subexp.level_num_cycles(m-1);
+                int cycle = subexp.level_cycle(m-1);
+                if (ncycles > 1)
+                {
+                    layout.partnames[n].text = subexp.level_part_name(m) + ":";
+                    layout.partvalues[n].text =
+                        string(cycle+1) + "/" + string(ncycles);
+                }
+                else if (ncycles < 0)
+                {
+                    layout.partnames[n].text = subexp.level_part_name(m) + ":";
+                    layout.partvalues[n].text = string(cycle+1);
+                }
+                else
+                {
+                    layout.partnames[n].text = subexp.level_part_name(m);
+                    layout.partvalues[n].text = "";
+                }
+                n++;
+                m++;
+            }
+        }
+
+        // Clear remaining labels.
+        while (n < nlabels)
+        {
+            layout.partnames[n].text = "";
+            layout.partvalues[n].text = "";
+            n++;
+        }
+    }
+
+
+    void clear_state_info()
+    {
+        int nlabels = layout.partnames.size;
+        int n;
+        while (n < nlabels)
+        {
+            layout.partnames[n].text = "";
+            layout.partvalues[n].text = "";
+            n++;
+        }
+    }
+
+
+    Timer clock
+    {
+        ClockState state;       // idle, ready, running, paused, finished
+        bool    released;       // if not set, cumulative time stays 0
+        time[]  timestamps = {}; // array of time stamps
+        time    timeref;        // most recent start time reference
+        dur     duration;       // cumulative running time
+        dur     total_runtime;  // total running time
+
+
+        init()
+        {
+            state = CLOCK_IDLE;
+        }
+
+
+        on_event:expire()
+        {
+            layout.canvas.counter.text =
+                string(int(duration + (expire_time - timeref)) / 100) + "00";
+            start(expire_time + 100ms);
+        }
+    }
+
+
+    //--------------------------------------------------------------------------
+
+
+    bool researcher_exists(string id)
+    {
+        // Check if researcher record exists.
+        return expdb.researcher_exists(id);
+    }
+
+
+    int create_researcher(string id, bool failifexists)
+    {
+        // Add researcher record if not yet done.
+        int err = OK;
+        if (!expdb.researcher_exists(id))
+        {
+            expdb.add_researcher(id);
+            if (error()) err = ERROR;
+        }
+        else if (failifexists)
+            err = ERROR;
+
+        return err;
+    }
+
+
+    int check_out_researcher(string id, bool readonly, bool verbose=false)
+    {
+        if (!is_valid_alphanum(id)) return ERROR;
+
+        // Check out researcher record for desired mode.
+        int err = OK;
+        if (!expdb.researcher_exists(id))
+        {
+            err = ERROR;
+            if (verbose)
+            {
+                ctrl_window.show_error("Researcher record \"" + id +
+                    "\" doesn't exist.");
+            }
+        }
+        if (!err && !expdb.researcher_accessible(id, readonly))
+        {
+            err = RECORD_LOCKED;
+            if (verbose)
+            {
+                ctrl_window.show_error("Selected researcher record is locked.");
+            }
+        }
+        if (!err)
+        {
+            expdb.check_out_researcher(id, readonly);
+            if (error()) err = ERROR;
+        }
+
+        return err;
+    }
+
+
+    int check_in_researcher()
+    {
+        // Check in researcher record.
+        expdb.check_in_researcher();
+        int err = error() ? ERROR : OK;
+
+        return err;
+    }
+
+
+    void show_researcher_info()
+    {
+        int i = expdb.find_researcher(resid);
+        if (i >= 0)
+            layout.info1.researcher.text = resid;
+        else
+            layout.info1.researcher.text = "-";
+    }
+
+
+    //--------------------------------------------------------------------------
+
+
+    bool participant_exists(string id)
+    {
+        // Check if participant record exists.
+        return expdb.participant_exists(id);
+    }
+
+
+    int create_participant(string id, bool failifexists)
+    {
+        // Add participant record if not yet done.
+        int err = OK;
+        if (!expdb.participant_exists(id))
+        {
+            expdb.add_participant(id);
+            if (error()) err = ERROR;
+        }
+        else if (failifexists)
+            err = ERROR;
+
+        return err;
+    }
+
+
+    int check_out_participant(string id, bool readonly, bool verbose=false)
+    {
+        if (!is_valid_alphanum(id)) return ERROR;
+
+        // Check out participant record for desired mode.
+        int err = OK;
+        if (!expdb.participant_exists(id))
+        {
+            err = ERROR;
+            if (verbose)
+            {
+                ctrl_window.show_error("Participant record \"" + id +
+                    "\" doesn't exist.");
+            }
+        }
+        if (!err && !expdb.participant_accessible(id, readonly))
+        {
+            err = RECORD_LOCKED;
+            if (verbose)
+            {
+                ctrl_window.show_error("Selected participant record is locked.");
+            }
+        }
+        if (!err)
+        {
+            expdb.check_out_participant(id, readonly);
+            if (error()) err = ERROR;
+        }
+
+        return err;
+    }
+
+
+    int check_in_participant()
+    {
+        // Check in participant record.
+        expdb.check_in_participant();
+        int err = error() ? ERROR : OK;
+
+        return err;
+    }
+
+
+    void show_participant_info()
+    {
+        int i = expdb.find_participant(ppid);
+        if (i >= 0)
+            layout.info1.participant.text = ppid;
+        else
+            layout.info1.participant.text = "-";
+    }
+
+
+    //--------------------------------------------------------------------------
+
+
+    int check_out_experiment(bool readonly)
+    {
+        // Check out experiment record for desired mode. If the experiment
+        // record happens to be in preparing mode the record will be checked
+        // out for updating regardless of the value of the readonly flag
+        // specified.
+        expdb.check_out_experiment(script_name(), readonly);
+        int err = error() ? ERROR : OK;
+
+        return err;
+    }
+
+
+    int check_in_experiment()
+    {
+        // Check in experiment record.
+        expdb.check_in_experiment();
+        int err = error() ? ERROR : OK;
+
+        return err;
+    }
+
+
+    void show_experiment_info()
+    {
+        int i = expdb.find_experiment(script_name());
+        if (i < 0)
+        {
+            layout.info1.expstatus.text = "-";
+            return;
+        }
+
+        ExperimentRecord exp = expdb.experiments[i];
+        if (exp.status == EXP_STATUS_PREPARING)
+            layout.info1.expstatus.text = "preparing";
+        else if (exp.status == EXP_STATUS_PILOTING)
+            layout.info1.expstatus.text = "piloting";
+        else if (exp.status == EXP_STATUS_TESTING)
+            layout.info1.expstatus.text = "testing";
+        else if (exp.status == EXP_STATUS_CLOSED)
+            layout.info1.expstatus.text = "closed";
+    }
+
+
+    void show_group_info()
+    {
+        if (num_participant_groups() > 0)
+        {
+            if (SHOW_ASSIGNED_GROUP)
+                layout.info1.group.text = string(selected_group);
+            else
+                layout.info1.group.fancy_text = "<i>(hidden)</i>";
+        }
+        else
+        {
+            layout.info1.group.text = "-";
+        }
+    }
+
+
+    void show_session_info()
+    {
+        layout.info1.session.text = string(expdb.session.id);
+    }
+
+
+    //--------------------------------------------------------------------------
+
+
+    int begin_new_session_part1()
+    {
+        // Check out experiment record. If the experiment record happens to
+        // be in preparing mode the record will be checked out for updating
+        // regardless of the value of the readonly flag specified.
+        int err = check_out_experiment(!EXPERIMENT_RECORD_UPDATEABLE);
+        if (err) return ERROR;
+
+        // If experiment status is CLOSED fail.
+        if (expdb.experiment.status == EXP_STATUS_CLOSED)
+        {
+            check_in_experiment();
+            ctrl_window.show_error("Experiment is marked <b>closed</b>.\n"
+                "No more sessions can be run.", true);
+            return ERROR;
+        }
+
+        // If experiment record is checked out for updating create experiment
+        // record fields and if applicable create group records and group
+        // record fields.
+        if (expdb.experiment.lock_counter < 0)
+        {
+            err = prepare_experiment();
+            if (err)
+            {
+                check_in_experiment();
+                ctrl_window.show_error("Experiment and/or group record "
+                    "preparation failed.");
+                return ERROR;
+            }
+        }
+
+        // Check experiment record fields.
+        if (expdb.experiment.has_missing_fields())
+        {
+            check_in_experiment();
+            ctrl_window.show_error("One or more experiment record attributes "
+                "not set.\n\n"
+                "Add required fields in <b>create_experiment_fields()</b>\n"
+                "in <tt>modules/experiment.zm</tt>.", true);
+            return ERROR;
+        }
+        err = check_experiment_fields();
+        if (err)
+        {
+            check_in_experiment();
+            ctrl_window.show_error("Invalid attribute value(s) in experiment "
+                "record.");
+            return ERROR;
+        }
+
+        // Check if database and script agree about which participant groups
+        // exist.
+        if (!database_has_required_groups())
+        {
+            check_in_experiment();
+            ctrl_window.show_error("Group records in database don't match "
+                "groups defined in script.");
+            return ERROR;
+        }
+        if (!script_has_required_groups())
+        {
+            check_in_experiment();
+            ctrl_window.show_error("Groups defined in script don't match "
+                "group records in database.");
+            return ERROR;
+        }
+
+
+        // If no researcher specified then substitute current username.
+        if (!is_valid_alphanum(resid))
+        {
+            resid = user_name();
+            err = create_researcher(resid, false);
+            if (err)
+            {
+                check_in_experiment();
+                return ERROR;
+            }
+            show_researcher_info();
+        }
+
+        // If still no researcher specified then fail.
+        if (!is_valid_alphanum(resid))
+        {
+            check_in_experiment();
+            ctrl_window.show_error("No researcher selected.");
+            return ERROR;
+        }
+
+        // Check out researcher record.
+        err = check_out_researcher(resid, !RESEARCHER_RECORD_UPDATEABLE, true);
+        if (err)
+        {
+            check_in_experiment();
+            return ERROR;
+        }
+
+        // Check researcher record fields.
+        if (expdb.researcher.has_missing_fields())
+        {
+            check_in_researcher();
+            check_in_experiment();
+            ctrl_window.show_error("One or more researcher record attributes "
+                "not set.\n\n"
+                "Add required fields in <b>create_researcher_fields()</b>\n"
+                "in <tt>modules/researcher.zm</tt>.", true);
+            return ERROR;
+        }
+        err = check_researcher_fields();
+        if (err)
+        {
+            check_in_researcher();
+            check_in_experiment();
+            ctrl_window.show_error("Invalid attribute value(s) in researcher "
+                "record.");
+            return ERROR;
+        }
+
+
+        // If no participant specified and experiment status is PREPARING
+        // then substitute 'dummy'.
+        if (!is_valid_alphanum(ppid) &&
+                expdb.experiment.status == EXP_STATUS_PREPARING)
+        {
+            ppid = "dummy";
+            err = create_participant(ppid, false);
+            if (err)
+            {
+                check_in_researcher();
+                check_in_experiment();
+                return ERROR;
+            }
+            show_participant_info();
+        }
+
+        // If still no participant specified then fail.
+        if (!is_valid_alphanum(ppid))
+        {
+            check_in_researcher();
+            check_in_experiment();
+            ctrl_window.show_error("No participant selected.");
+            return ERROR;
+        }
+
+        // Check out participant record for updating. This assures that a
+        // participant can only take part in one session at a time.
+        err = check_out_participant(ppid, false, true);
+        if (err)
+        {
+            check_in_researcher();
+            check_in_experiment();
+            return ERROR;
+        }
+
+        // Check participant record fields.
+        if (expdb.participant.has_missing_fields())
+        {
+            check_in_participant();
+            check_in_researcher();
+            check_in_experiment();
+            ctrl_window.show_error("One or more participant record attributes "
+                "not set.\n\n"
+                "Add required fields in <b>create_participant_fields()</b>\n"
+                "in <tt>modules/participant.zm</tt>.", true);
+            return ERROR;
+        }
+        err = check_participant_fields();
+        if (err)
+        {
+            check_in_participant();
+            check_in_researcher();
+            check_in_experiment();
+            ctrl_window.show_error("Invalid attribute value(s) in participant "
+                "record.");
+            return ERROR;
+        }
+
+
+        // If experiment defines groups then select group for participant.
+        if (num_participant_groups() > 0)
+        {
+            // Determine participant group.
+            if (num_participant_groups() == 1)
+            {
+                select_group_default();
+            }
+            else
+            {
+                if (have_option("grp"))
+                    err = select_group_specified();
+                else
+                    err = assign_participant_to_group();
+                if (err)
+                {
+                    check_in_participant();
+                    check_in_researcher();
+                    check_in_experiment();
+                    return ERROR;
+                }
+            }
+        }
+
+        return OK;
+    }
+
+
+    int begin_new_session_part2()
+    {
+        int err;
+        if (num_participant_groups() > 0)
+        {
+            // Check out group record.
+            expdb.check_out_group(script_name(), string(selected_group),
+                !GROUP_RECORD_UPDATEABLE);
+            if (error())
+            {
+                check_in_participant();
+                check_in_researcher();
+                check_in_experiment();
+                return ERROR;
+            }
+
+            // Check group record fields.
+            if (expdb.group.has_missing_fields())
+            {
+                expdb.check_in_group();
+                check_in_participant();
+                check_in_researcher();
+                check_in_experiment();
+                ctrl_window.show_error("One or more group record attributes "
+                    "not set.\n\n"
+                    "Add required fields in <b>create_group_fields()</b>\n"
+                    "in <tt>modules/grouping.zm</tt>.", true);
+                return ERROR;
+            }
+            err = check_group_fields();
+            if (err)
+            {
+                expdb.check_in_group();
+                check_in_participant();
+                check_in_researcher();
+                check_in_experiment();
+                ctrl_window.show_error("Invalid attribute value(s) in group "
+                    "record.");
+                return ERROR;
+            }
+        }
+        show_group_info();
+
+
+        // Perform pre-session setup.
+        err = setup_pre_session();
+        if (err)
+        {
+            expdb.check_in_group();
+            check_in_participant();
+            check_in_researcher();
+            check_in_experiment();
+            return ERROR;
+        }
+
+        // Create new experiment session record.
+        expdb.begin_new_session(EXPERIMENT_VERSION);
+        if (error())
+        {
+            expdb.check_in_group();
+            check_in_participant();
+            check_in_researcher();
+            check_in_experiment();
+            return ERROR;
+        }
+
+        // Create session fields and initialize from script arguments.
+        // Arguments on the command line have format: --arg-name=value
+        // We attempt to save each name/value as a session field.
+        int n;
+        while (n < num_options())
+        {
+            string opt = replace(option_name(n), '-', ' ');
+            if (substring(opt, 0, 4) == "arg ")
+            {
+                string name = substring(opt, 4, length(opt)-4);
+                string value = unescape_specials(option_value(n));
+                if (expdb.session.is_valid_field(name, value))
+                {
+                    expdb.session.set_field(name, value);
+                    if (error()) err = ERROR;
+                }
+                else
+                {
+                    print_error("Invalid session argument: " +
+                        name + "=\"" + value + "\".\n");
+                    err = ERROR;
+                }
+            }
+            n++;
+        }
+        if (!err && expdb.session.has_missing_fields())
+        {
+            ctrl_window.show_error("One or more session record attributes not "
+                "set.\n\n"
+                "Use <b>zepdb2dump -defs</b> to list the attributes. "
+                "Then rerun the script\nspecifying the required session "
+                "attribute(s) as script argument(s) like so:\n"
+                "    <tt>--arg-<i>name</i>=<i>value</i></tt>\n"
+                "where <tt><i>name</i></tt> and <tt><i>value</i></tt> "
+                "represent the attribute's name resp. value.", true);
+            err = ERROR;
+        }
+        if (err)
+        {
+            int sesid = expdb.session.id;
+            expdb.end_session(SESSION_STATUS_FAILED);   // Will check-in all.
+            expdb.remove_session(script_name(), sesid); // Remove session.
+            return ERROR;
+        }
+
+        // Load item table(s) from CSV file(s).
+        err = load_item_tables();
+        if (err)
+        {
+            int sesid = expdb.session.id;
+            expdb.end_session(SESSION_STATUS_FAILED);   // Will check-in all.
+            expdb.remove_session(script_name(), sesid); // Remove session.
+            return ERROR;
+        }
+
+        // Perform session setup.
+        err = setup_session();
+        if (err)
+        {
+            int sesid = expdb.session.id;
+            expdb.end_session(SESSION_STATUS_FAILED);   // Will check-in all.
+            expdb.remove_session(script_name(), sesid); // Remove session.
+            return ERROR;
+        }
+        show_session_info();
+
+        return OK;
+    }
+
+
+    int end_session(SessionStatus status)
+    {
+        // Check in experiment session, group, participant, researcher and
+        // experiment records.
+        expdb.end_session(status);  // Will check-in all other records.
+        int err = error() ? ERROR : OK;
+
+        return err;
+    }
+
+
+    int confirm_begin_experiment()
+    {
+        if (state != CONTROL_READY) return ERROR;
+
+        int err = begin_new_session_part1();
+        if (err) return ERROR;
+
+        state = CONTROL_KICKOFF;
+        exp_kickoff.action(this);
+
+        return OK;
+    }
+
+
+    int cancel_begin_experiment()
+    {
+        if (state != CONTROL_KICKOFF) return ERROR;
+
+        check_in_participant();
+        check_in_researcher();
+        check_in_experiment();
+
+        state = CONTROL_READY;
+
+        return OK;
+    }
+
+
+    int really_begin_experiment()
+    {
+        if (state != CONTROL_KICKOFF) return ERROR;
+
+        int err = begin_new_session_part2();
+        if (err)
+        {
+            state = CONTROL_READY;
+            return ERROR;
+        }
+
+        state = CONTROL_RUNNING;
+
+        layout.buttons.participant.is_sensitive = false;
+        layout.buttons.researcher.is_sensitive = false;
+        layout.buttons.experiment.is_sensitive = false;
+        layout.buttons.startexp.is_sensitive = false;
+
+        experiment.reference_time = event_time;
+        experiment.enter();
+
+        return OK;
+    }
+
+
+    void end_experiment(bool abort=false)
+    {
+        if (abort && state == CONTROL_RUNNING)
+            state = CONTROL_ABORTED;
+
+        if (state == CONTROL_RUNNING || state == CONTROL_ABORTED)
+        {
+            int err;
+            if (state == CONTROL_RUNNING)
+                err = end_session(SESSION_STATUS_FINISHED);
+            else
+                err = end_session(SESSION_STATUS_ABORTED);
+            if (err) return;
+
+            // Close the database.
+            expdb.close();
+
+            state = CONTROL_FINISHED;
+        }
+    }
+
+
+    int stop_experiment()
+    {
+        if (state != CONTROL_RUNNING) return ERROR;
+
+        signal(experiment, SYS_STOP);
+
+        return OK;
+    }
+
+
+    int quit_experiment()
+    {
+        if (state != CONTROL_IDLE &&
+            state != CONTROL_READY &&
+            state != CONTROL_RUNNING &&
+            state != CONTROL_ABORTED &&
+            state != CONTROL_FINISHED) return ERROR;
+
+        if (state == CONTROL_RUNNING)
+            state = CONTROL_ABORTED;
+
+        if (state >= CONTROL_RUNNING)
+            experiment.leave();
+
+        return OK;
+    }
+
+
+    void mark_experiment_aborted()
+    {
+        if (state == CONTROL_RUNNING)
+            state = CONTROL_ABORTED;
+    }
+
+
+    int begin()
+    {
+        if (state == CONTROL_READY) return OK;
+        if (state != CONTROL_IDLE) return ERROR;
+
+        // Open the database. Will stay open until script termination or
+        // end_experiment().
+        string dbdir = experiment_dir() + DATABASE_DIR;
+        if (!file_exists(dbdir)) create_dir(dbdir);
+        string dbfn = dbdir + "/zep.db";
+        expdb.open(dbfn);
+        if (error()) return ERROR;
+
+        // If --prepattr flag specified define all record attributes.
+        // Note, this requires exclusive access to the database.
+        bool quit = false;
+        if (flag_value("prepattr"))
+        {
+            define_attributes();
+            quit = true;
+        }
+        // If --prepexp flag specified create experiment record and group
+        // records.
+        if (flag_value("prepexp"))
+        {
+            prepare_experiment();
+            quit = true;
+        }
+        // Exit if --prepattr and/or --prepexp was given.
+        if (quit)
+        {
+            expdb.close();
+            return 1;
+        }
+
+        // If we are the only user perform database preparation as above
+        // for --prepattr and --prepexp.
+        int err;
+        if (expdb.num_users == 1)
+        {
+            err = prepare_database();
+            if (err) return ERROR;
+        }
+
+        if (have_option("res"))
+        {
+            string id = parse_option_researcher_id();
+            if (id != "")
+            {
+                err = create_researcher(id, false);
+                if (!err) resid = id;
+            }
+        }
+
+        if (have_option("pp"))
+        {
+            string id = parse_option_participant_id();
+            if (id != "")
+            {
+                err = create_participant(id, false);
+                if (!err) ppid = id;
+            }
+        }
+
+        state = CONTROL_READY;
+
+        experiment.target = this;
+
+        // Setup control window and test windows.
+        setup_windows();
+
+        // Show what we have.
+        clear_state_info();
+        clear_status();
+        show_experiment_info();
+        show_researcher_info();
+        show_participant_info();
+
+        return OK;
+    }
+
+
+    void end()
+    {
+        // Check in experiment session if applicable.
+        end_experiment();
+    }
+
+
+    //==========================================================================
+
+
+    void set_status(string txt)
+    {
+        layout.status.text = txt;
+    }
+
+
+    void clear_status()
+    {
+        layout.status.text = "";
+    }
+
+
+    //--------------------------------------------------------------------------
+
+
+    void show_light_icon(int mask)
+    {
+        if (mask & FRONT_SIDE)
+            layout.canvas.front_light_icon.is_visible = true;
+        if (mask & LEFT_SIDE)
+            layout.canvas.left_light_icon.is_visible = true;
+        if (mask & RIGHT_SIDE)
+            layout.canvas.right_light_icon.is_visible = true;
+    }
+
+
+    void hide_light_icon(int mask)
+    {
+        if (mask & FRONT_SIDE)
+            layout.canvas.front_light_icon.is_visible = false;
+        if (mask & LEFT_SIDE)
+            layout.canvas.left_light_icon.is_visible = false;
+        if (mask & RIGHT_SIDE)
+            layout.canvas.right_light_icon.is_visible = false;
+    }
+
+
+    void show_speaker_icon(int mask)
+    {
+        if (mask & FRONT_SIDE)
+            layout.canvas.front_speaker_icon.is_visible = true;
+        if (mask & LEFT_SIDE)
+            layout.canvas.left_speaker_icon.is_visible = true;
+        if (mask & RIGHT_SIDE)
+            layout.canvas.right_speaker_icon.is_visible = true;
+    }
+
+
+    void hide_speaker_icon(int mask)
+    {
+        if (mask & FRONT_SIDE)
+            layout.canvas.front_speaker_icon.is_visible = false;
+        if (mask & LEFT_SIDE)
+            layout.canvas.left_speaker_icon.is_visible = false;
+        if (mask & RIGHT_SIDE)
+            layout.canvas.right_speaker_icon.is_visible = false;
+    }
+
+
+    void show_counter_active()
+    {
+        layout.canvas.counter_active.is_visible = true;
+    }
+
+
+    void hide_counter_active()
+    {
+        layout.canvas.counter_active.is_visible = false;
+    }
+
+
+    //--------------------------------------------------------------------------
+
+
+    void start_light(int mask)
+    {
+        mask &= FRONT_SIDE | LEFT_SIDE | RIGHT_SIDE;
+        lightsmask |= mask;
+
+        if (lightsmask != 0 && !animtimer.is_running)
+        {
+            lightspattern = 0;
+            animtimer.start(now());
+        }
+
+        show_light_icon(mask);
+    }
+
+
+    void stop_light(int mask)
+    {
+        mask &= FRONT_SIDE | LEFT_SIDE | RIGHT_SIDE;
+        lightsmask &= ~mask;
+
+        if (lightsmask == 0)
+        {
+            update_lab_lights(0, 0);
+            animtimer.abort();
+        }
+
+        hide_light_icon(mask);
+    }
+
+
+    Timer animtimer
+    {
+        on_event:expire()
+        {
+            update_lab_lights(lightsmask, lightspattern);
+            lightspattern++;
+            start(expire_time + ANIM_UPDATE_INTERVAL);
+        }
+    }
+
+
+    //--------------------------------------------------------------------------
+
+
+    void begin_clock(bool release=false)
+    {
+        clock.abort();
+        clock.state = CLOCK_READY;
+        clock.released = release;
+        clock.timestamps.size = 0;
+        clock.duration = 0s;
+        clock.total_runtime = 0s;
+        layout.canvas.counter.text = "0";
+        hide_counter_active();
+    }
+
+
+    dur end_clock(time t)
+    {
+        if (clock.state == CLOCK_RUNNING)
+        {
+            if (clock.released)
+            {
+                clock.timestamps.size = clock.timestamps.size + 1;
+                clock.timestamps[clock.timestamps.size-1] = t;
+
+                clock.abort();
+                clock.duration += t - clock.timeref;
+                clock.total_runtime = t - clock.timestamps[0];
+
+                layout.canvas.counter.text = string(int(clock.duration));
+                hide_counter_active();
+            }
+        }
+        else if (clock.state == CLOCK_PAUSED)
+        {
+            if (clock.released)
+            {
+                clock.timestamps.size = clock.timestamps.size + 1;
+                clock.timestamps[clock.timestamps.size-1] = t;
+                clock.total_runtime = t - clock.timestamps[0];
+            }
+        }
+        clock.state = CLOCK_FINISHED;
+
+        return clock.duration;
+    }
+
+
+    void erase_clock()
+    {
+        clock.abort();
+        clock.state = CLOCK_IDLE;
+        clock.released = false;
+        layout.canvas.counter.text = "";
+        hide_counter_active();
+    }
+
+
+    void reset_clock()
+    {
+        erase_clock();
+        clock.timestamps.size = 0;
+        clock.duration = 0s;
+        clock.total_runtime = 0s;
+    }
+
+
+    void release_clock(time t)
+    {
+        if (clock.released) return;
+
+        clock.released = true;
+
+        if (clock.state == CLOCK_RUNNING)
+        {
+            clock.timestamps.size = clock.timestamps.size + 1;
+            clock.timestamps[clock.timestamps.size-1] = t;
+
+            clock.timeref = t;
+            clock.start(t + 100ms);
+            show_counter_active();
+        }
+    }
+
+
+    dur start_clock(time t)
+    {
+        if (clock.state == CLOCK_READY || clock.state == CLOCK_PAUSED)
+        {
+            clock.state = CLOCK_RUNNING;
+            if (clock.released)
+            {
+                clock.timestamps.size = clock.timestamps.size + 1;
+                clock.timestamps[clock.timestamps.size-1] = t;
+
+                clock.timeref = t;
+                clock.start(t + 100ms);
+                show_counter_active();
+            }
+        }
+
+        return clock.duration;
+    }
+
+
+    dur stop_clock(time t)
+    {
+        if (clock.state == CLOCK_RUNNING)
+        {
+            clock.state = CLOCK_PAUSED;
+            if (clock.released)
+            {
+                clock.timestamps.size = clock.timestamps.size + 1;
+                clock.timestamps[clock.timestamps.size-1] = t;
+
+                clock.abort();
+                clock.duration += t - clock.timeref;
+                layout.canvas.counter.text = string(int(clock.duration));
+                hide_counter_active();
+            }
+        }
+
+        return clock.duration;
+    }
+
+
+    dur update_clock(time t)
+    {
+        if (clock.state == CLOCK_RUNNING)
+        {
+            if (clock.released)
+            {
+                clock.duration += t - clock.timeref;
+                clock.timeref = t;
+                layout.canvas.counter.text = string(int(clock.duration));
+            }
+        }
+
+        return clock.duration;
+    }
+
+
+    //--------------------------------------------------------------------------
+
+
+    int find_button(int btn)
+    {
+        if (btn < 0) return -1;
+
+        int nitems = btnmap.size;
+
+        // If "any button is valid" then return index 0.
+        if (nitems == 1 && btnmap[0].key < 0) return 0;
+
+        int n;
+        while (n < nitems)
+        {
+            if (btn == btnmap[n].key) return n;
+            n++;
+        }
+
+        return -1;
+    }
+
+
+    void enable_button(int btn, int code=CONTINUE)
+    {
+        if (btn < 0) return;
+
+        // Remove the "any button is valid" entry if present.
+        if (btnmap.size == 1 && btnmap[0].key < 0) btnmap.size = 0;
+
+        int i = find_button(btn);
+        if (i < 0)
+        {
+            i = btnmap.size;
+            btnmap.size = i + 1;
+        }
+        btnmap[i].key = btn;
+        btnmap[i].code = code;
+    }
+
+
+    void enable_all_buttons(int code=CONTINUE)
+    {
+        // Create a single "any button is valid" entry.
+        btnmap.size = 1;
+        btnmap[0].key = -1;
+        btnmap[0].code = code;
+    }
+
+
+    void disable_buttons()
+    {
+        btnmap.size = 0;
+    }
+
+
+    void handle_button(int btn)
+    {
+        if (state >= CONTROL_RUNNING && target != null)
+        {
+            int i = find_button(btn);
+            if (i >= 0)
+                signal_target(btnmap[i].code);
+        }
+    }
+
+
+    void handle_voicekey(int action)
+    {
+        if (state >= CONTROL_RUNNING && target != null)
+        {
+            int i = find_button(action ? VOICEKEY_ON : VOICEKEY_OFF);
+            if (i >= 0 && btnmap[i].key >= 0)
+                signal_target(btnmap[i].code);
+        }
+    }
+
+
+    //--------------------------------------------------------------------------
+
+
+    int find_key(int key)
+    {
+        if (key < 0) return -1;
+
+        int nitems = keymap.size;
+
+        // If "any key is valid" then return index 0.
+        if (nitems == 1 && keymap[0].key < 0) return 0;
+
+        int n;
+        while (n < nitems)
+        {
+            if (key == keymap[n].key) return n;
+            n++;
+        }
+
+        return -1;
+    }
+
+
+    void enable_key(char key, int code=CONTINUE)
+    {
+        if (int(key) < 0) return;
+
+        // Remove the "any key is valid" entry if present.
+        if (keymap.size == 1 && keymap[0].key < 0) keymap.size = 0;
+
+        int i = find_key(int(key));
+        if (i < 0)
+        {
+            i = keymap.size;
+            keymap.size = i + 1;
+        }
+        keymap[i].key = int(key);
+        keymap[i].code = code;
+    }
+
+
+    void enable_all_keys(int code=CONTINUE)
+    {
+        // Create a single "any key is valid" entry.
+        keymap.size = 1;
+        keymap[0].key = -1;
+        keymap[0].code = code;
+    }
+
+
+    void disable_keys()
+    {
+        keymap.size = 0;
+    }
+
+
+    void handle_key(Page page, char key, int modifiers)
+    {
+        bool handled;
+        if (input_modifiers == 0 && state >= CONTROL_RUNNING && target != null)
+        {
+            int i = find_key(int(key));
+            if (i >= 0)
+            {
+                signal_target(keymap[i].code);
+                handled = true;
+            }
+        }
+
+        if (!handled) handle_special_key(page, key, modifiers);
+    }
+
+
+    void handle_key(Window win, char key, int modifiers)
+    {
+        bool handled;
+        if (input_modifiers == 0 && state >= CONTROL_RUNNING && target != null)
+        {
+            int i = find_key(int(key));
+            if (i >= 0)
+            {
+                signal_target(keymap[i].code);
+                handled = true;
+            }
+        }
+
+        if (!handled) handle_special_key(win, key, modifiers);
+    }
+}
+
+
+// Weak function to be overloaded by experiment.
+weak int load_item_tables()
+{
+//    if (test::load_item_tables() != OK) return ERROR;
+
+    return OK;
+}
+
+
+// Weak function to be overloaded by experiment. For example by importing
+// baby_io_spp.zm or baby_io_beexybox.zm.
+weak void update_lab_lights(int mask, int pattern)
+{
+    // Empty.
+}
