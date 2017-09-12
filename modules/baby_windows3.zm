@@ -19,7 +19,7 @@ HISTORY:
 
 plugin zep_display;
 
-import std_baby_control;
+import baby_control;
 import globaldefs;
 import colors;
 import fonts;

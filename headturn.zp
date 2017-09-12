@@ -24,14 +24,15 @@ HISTORY:
 
 requires 2.0;
 
-import std_baby_windows3;
+// Default/Standard modules
 import std_entry_page2;
 import std_exit_page2;
 import std_sound_playback;
-import stimuli;
 import io_beexybox;         // Enable to use BeexyBox response box.
-//import io_spp;              // Enable to use SPP based response box.
 
+// Custom modules
+import baby_windows3;
+import stimuli;
 import familiarization::task;
 import test::task;
 
