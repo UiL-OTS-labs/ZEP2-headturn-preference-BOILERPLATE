@@ -1,0 +1,21 @@
+/*
+    These settings will be used by ZEP to position the windows on the right
+    display. These settings will likely need to be configured per setup.
+    Run zepdpyinfo oin a terminal to review zep display detection info.
+*/
+
+// Main control window
+const int CTRL_WINDOW_TARGET_HEAD = 0;
+
+// Note: these settings are only activated if zep detects equal or more than
+// 4 heads (displays). Any thing less and it will try to nicely stack the windows on the
+// CTRL_WINDOW target head.
+
+// Front Monitor/Display/Screen
+const int TEST_WINDOW1_TARGET_HEAD = 1;
+
+// Left Monitor/Display/Screen
+const int TEST_WINDOW2_TARGET_HEAD = 2;
+
+// Right Monitor/Display/Screen
+const int TEST_WINDOW3_TARGET_HEAD = 3;

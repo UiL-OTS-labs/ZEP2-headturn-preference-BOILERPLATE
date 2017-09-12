@@ -30,6 +30,7 @@ import experiment;
 import grouping;
 import session;
 import page_settings;
+import baby_windows3_settings;
 
 
 // Page transition delay for next page transition.
@@ -895,12 +896,12 @@ void position_test_windows(bool home=false)
         test_window1.is_maximized = false;
         if (display_device.num_heads >= 4)
         {
-            test_window3.virtual_size = display_device.head_width[3],
-                display_device.head_height[3];
-            test_window2.virtual_size = display_device.head_width[2],
-                display_device.head_height[2];
-            test_window1.virtual_size = display_device.head_width[1],
-                display_device.head_height[1];
+            test_window3.virtual_size = display_device.head_width[TEST_WINDOW3_TARGET_HEAD],
+                display_device.head_height[TEST_WINDOW3_TARGET_HEAD];
+            test_window2.virtual_size = display_device.head_width[TEST_WINDOW2_TARGET_HEAD],
+                display_device.head_height[TEST_WINDOW2_TARGET_HEAD];
+            test_window1.virtual_size = display_device.head_width[TEST_WINDOW1_TARGET_HEAD],
+                display_device.head_height[TEST_WINDOW1_TARGET_HEAD];
         }
         else if (display_device.num_heads >= 2)
         {
@@ -913,42 +914,42 @@ void position_test_windows(bool home=false)
         }
         else
         {
-            test_window3.virtual_size = display_device.head_width[0],
-                display_device.head_height[0];
-            test_window2.virtual_size = display_device.head_width[0],
-                display_device.head_height[0];
-            test_window1.virtual_size = display_device.head_width[0],
-                display_device.head_height[0];
+            test_window3.virtual_size = display_device.head_width[CTRL_WINDOW_TARGET_HEAD],
+                display_device.head_height[CTRL_WINDOW_TARGET_HEAD];
+            test_window2.virtual_size = display_device.head_width[CTRL_WINDOW_TARGET_HEAD],
+                display_device.head_height[CTRL_WINDOW_TARGET_HEAD];
+            test_window1.virtual_size = display_device.head_width[CTRL_WINDOW_TARGET_HEAD],
+                display_device.head_height[CTRL_WINDOW_TARGET_HEAD];
         }
-        test_window3.target_head = 0;
+        test_window3.target_head = CTRL_WINDOW_TARGET_HEAD;
         test_window3.alignment_and_relative_size =
             ALIGN_END, ALIGN_BEGIN, 30, 30;
-        test_window2.target_head = 0;
+        test_window2.target_head = CTRL_WINDOW_TARGET_HEAD;
         test_window2.alignment_and_relative_size =
             ALIGN_BEGIN, ALIGN_BEGIN, 30, 30;
-        test_window1.target_head = 0;
+        test_window1.target_head = CTRL_WINDOW_TARGET_HEAD;
         test_window1.alignment_and_relative_size =
             ALIGN_CENTER, ALIGN_BEGIN, 30, 30;
 
         ctrl_window.is_fullscreen = false;
         ctrl_window.is_maximized = false;
-        ctrl_window.target_head = 0;
+        ctrl_window.target_head = CTRL_WINDOW_TARGET_HEAD;
     }
     else
     {
         // We can only get here iff nheads >= 4.
-        test_window3.target_head = 3;
+        test_window3.target_head = TEST_WINDOW3_TARGET_HEAD;
         test_window3.virtual_size = 0, 0;
         test_window3.is_fullscreen = true;
-        test_window2.target_head = 2;
+        test_window2.target_head = TEST_WINDOW2_TARGET_HEAD;
         test_window2.virtual_size = 0, 0;
         test_window2.is_fullscreen = true;
-        test_window1.target_head = 1;
+        test_window1.target_head = TEST_WINDOW1_TARGET_HEAD;
         test_window1.virtual_size = 0, 0;
         test_window1.is_fullscreen = true;
 
-        ctrl_window.target_head = 0;
-//        ctrl_window.is_fullscreen = true;
+        ctrl_window.target_head = CTRL_WINDOW_TARGET_HEAD;
+        ctrl_window.is_fullscreen = true;
     }
 }
 
