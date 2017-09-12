@@ -20,7 +20,7 @@ HISTORY:
 
 import std_display;
 import std_defs;
-import std_baby_control_colors;
+import baby_control_colors;
 import std_baby_control_fonts;
 import std_res_browser;
 import std_res_editor;
@@ -231,6 +231,12 @@ Page control
 
                 counter.offset_x = actual_width - 50;
                 counter.offset_y = 50;
+
+                counter_background.width = counter.offset_x - counter_active.offset_x;
+                counter_background.height = counter.line_height;
+
+                counter_background.offset_x = counter_active.offset_x;
+                counter_background.offset_y = counter.offset_y;
             }
 
 
@@ -313,6 +319,14 @@ Page control
                 }
             }
 
+            RectangleShape counter_background
+            {
+                init()
+                {
+                    corner_radius = 10;
+                    fill_pattern_color = CONTROL_COUNTER_BACKGROUND_COLOR;
+                }
+            }
 
             CircleShape counter_active
             {
@@ -322,7 +336,6 @@ Page control
                     fill_pattern_color = CONTROL_COUNTER_COLOR;
                 }
             }
-
 
             TextShape counter
             {
@@ -335,6 +348,7 @@ Page control
                     is_visible = true;
                 }
             }
+
         }
 
 
@@ -1934,6 +1948,7 @@ Page control
         clock.duration = 0s;
         clock.total_runtime = 0s;
         layout.canvas.counter.text = "0";
+        layout.canvas.counter_background.is_visible = true;
         hide_counter_active();
     }
 
@@ -1976,6 +1991,7 @@ Page control
         clock.state = CLOCK_IDLE;
         clock.released = false;
         layout.canvas.counter.text = "";
+        layout.canvas.counter_background.is_visible = false;
         hide_counter_active();
     }
 
