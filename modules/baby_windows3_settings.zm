@@ -19,3 +19,9 @@ const int TEST_WINDOW2_TARGET_HEAD = 2;
 
 // Right Monitor/Display/Screen
 const int TEST_WINDOW3_TARGET_HEAD = 3;
+
+// Set thumbnail width for all window thumbnails
+const int THUMBNAIL_WIDTH = int(160*1.5);
+
+// Set thumbnail hgith for all window thumbnails
+const int THUMBNAIL_HEIGHT = int(90*1.5);

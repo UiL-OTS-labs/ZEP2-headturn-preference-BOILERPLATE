@@ -226,6 +226,17 @@ Page control
                 right_speaker_icon.offset_x = right_light_icon.offset_x;
                 right_speaker_icon.offset_y = right_light_icon.offset_y + 100;
 
+                // Set thumbnail locations
+                // Middle
+                thumbnail_window1.offset_x = actual_width/2 - (THUMBNAIL_WIDTH/2);
+                thumbnail_window1.offset_y = actual_height - THUMBNAIL_HEIGHT;
+                //Left
+                thumbnail_window2.offset_x = 0;
+                thumbnail_window2.offset_y = thumbnail_window1.offset_y;
+                //Right
+                thumbnail_window3.offset_x = actual_width - THUMBNAIL_WIDTH;
+                thumbnail_window3.offset_y = thumbnail_window1.offset_y;
+
                 counter_active.offset_x = actual_width / 4 * 3;
                 counter_active.offset_y = front_light_icon.offset_y;
 
@@ -239,6 +250,53 @@ Page control
                 counter_background.offset_y = counter.offset_y;
             }
 
+            ImageShape thumbnail_window1
+            {
+                void enable(Window win)
+                {
+                    this.follow_window(win);
+                    width = THUMBNAIL_WIDTH;
+                    height = THUMBNAIL_HEIGHT;
+                    is_visible = true;
+                }
+
+                void disable()
+                {
+                    is_visible = false;
+                }
+            }
+
+            ImageShape thumbnail_window2
+            {
+                void enable(Window win)
+                {
+                    this.follow_window(win);
+                    width = THUMBNAIL_WIDTH;
+                    height = THUMBNAIL_HEIGHT;
+                    is_visible = true;
+                }
+
+                void disable()
+                {
+                    is_visible = false;
+                }
+            }
+
+            ImageShape thumbnail_window3
+            {
+                void enable(Window win)
+                {
+                    this.follow_window(win);
+                    width = THUMBNAIL_WIDTH;
+                    height = THUMBNAIL_HEIGHT;
+                    is_visible = true;
+                }
+
+                void disable()
+                {
+                    is_visible = false;
+                }
+            }
 
             CircleShape front_light_icon
             {
@@ -919,9 +977,27 @@ Page control
 
     void toggle_thumbnail(Window win1, Window win2=null, Window win3=null)
     {
-        // Not implemented.
+        if(layout.canvas.thumbnail_window1.is_visible)
+            hide_thumbnail(win1, win2, win3);
+        else
+            show_thumbnail(win1, win2, win3);
     }
 
+    void show_thumbnail(Window win1, Window win2=null, Window win3=null)
+    {
+        layout.canvas.thumbnail_window1.enable(win1);
+        if(win2 != null)
+            layout.canvas.thumbnail_window2.enable(win2);
+        if(win3 != null)
+            layout.canvas.thumbnail_window3.enable(win3);
+    }
+
+    void hide_thumbnail(Window win1, Window win2=null, Window win3=null)
+    {
+        layout.canvas.thumbnail_window1.disable();
+        layout.canvas.thumbnail_window2.disable();
+        layout.canvas.thumbnail_window3.disable();
+    }
 
     void show_state_info()
     {
