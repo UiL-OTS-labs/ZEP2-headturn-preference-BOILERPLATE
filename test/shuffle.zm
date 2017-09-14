@@ -56,7 +56,7 @@ int shuffle_stimulus_list()
    }
 
    if (again)
-       print_error("Unable to shuffle test_items according to criteria. "
+       ctrl_window.show_error("Unable to shuffle test_items according to criteria. "
            "Check table and/or criteria.");
 
    return again ? ERROR : OK;

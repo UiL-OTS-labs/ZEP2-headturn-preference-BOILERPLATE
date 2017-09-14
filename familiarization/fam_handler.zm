@@ -6,7 +6,7 @@ ADAPTED BY:     -
 DESCRIPTION:
 
 Provides a state machine to handle the head-turn procedure contingency for
-the lights only. Once started the auditory stimuli continue independently. 
+the lights only. Once started the auditory stimuli continue independently.
 It controls the lights through the experiment control page.
 
 
@@ -149,8 +149,8 @@ State fam_handler
         {
             if (message_arg == RESPONSE_GO)
             {
-                // Infant is looking; if this is the first trial then we 
-                // become 'running' and the first auditory stimulus will be 
+                // Infant is looking; if this is the first trial then we
+                // become 'running' and the first auditory stimulus will be
                 // started.
                 if (!running)
                 {
@@ -313,7 +313,7 @@ State fam_handler
         item = it;
 
 
-        // The first subtrial (audio stimulus played) will be started at 
+        // The first subtrial (audio stimulus played) will be started at
         // first looking at the target side light. Then we become 'running'.
         // See state machine above. All subsequent subtrials are ITI apart.
         if (running) audio.play(tref + INTERSTIMULUS_INTERVAL);
@@ -328,9 +328,10 @@ State fam_handler
 
         // Update status line on control window. Cleared in done() above.
         control.set_status(
-            string(item.id) + "  " + 
-            string(item.type) + "  " + 
-            item.sndfn);
+            string(item.id) + "  " +
+            string(item.type) + "  " +
+            item.sndfn  + "  " +
+            item.sound_direction);
 
 
         // Remember who to signal when the trial is over.

@@ -28,9 +28,10 @@ enum ItemType
 // Item table record.
 record TestItem
 {
-    int         id;             // item id
-    ItemType    type;           // item type
-    string      sndfn;          // stimulus sound file
+    int                         id;             // item id
+    stimuli::ItemType           type;           // item type
+    string                      sndfn;          // stimulus sound file
+    baby_control::Direction     sound_direction; // direction the sounds come from
 }
 
 // Loads item table(s) from CSV file(s) in the stimuli folder.
@@ -42,7 +43,7 @@ int read_stimuli_list(TestItem[] target, string filename, bool skip_header_row =
         skip_lines_before_header);             // number of lines to skip before header and data
     if( error() )
     {
-        print_error("Something went wrong when trying to read a stimulus list from the file " + stimuli_dir() + filename);
+        print_error("Something went wrong when trying to read a stimulus list from the file " + stimuli_dir() + filename + "\n");
         return ERROR;
     }
 
