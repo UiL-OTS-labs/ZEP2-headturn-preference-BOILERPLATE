@@ -232,10 +232,10 @@ Page control
                 counter.offset_x = actual_width - 50;
                 counter.offset_y = 50;
 
-                counter_background.width = counter.offset_x - counter_active.offset_x;
+                counter_background.width = counter.offset_x - counter_active.offset_x + ( counter_active.radius * 2 ) + 5;
                 counter_background.height = counter.line_height;
 
-                counter_background.offset_x = counter_active.offset_x;
+                counter_background.offset_x = counter_active.offset_x - counter_active.radius - 5;
                 counter_background.offset_y = counter.offset_y;
             }
 
