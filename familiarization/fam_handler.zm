@@ -114,10 +114,7 @@ State fam_handler
     {
         on_event:entry()
         {
-            if( item.sound_direction & PSEUDO_RANDOM_SIDE )
-                set_pseudorandom_light_position();
-            else
-                lightpos = item.sound_direction;
+            set_pseudorandom_light_position();
 
             stop_light(FRONT_SIDE);
             start_light(lightpos);
@@ -242,7 +239,7 @@ State fam_handler
         on_event:start()
         {
             signal(fam_handler, AUDIO_START);
-            control.show_speaker_icon(lightpos);
+            control.show_speaker_icon(LEFT_SIDE | RIGHT_SIDE);
         }
 
 
@@ -256,18 +253,8 @@ State fam_handler
         void setup_channels()
         {
             this.scaling_all = 0;
-
-            if(lightpos & FRONT_SIDE)
-            {
-                 this.scaling[FRONT_RIGHT] = sound_settings::PLAYBACK_SCALING_VOLUME;
-                 this.scaling[FRONT_LEFT] = sound_settings::PLAYBACK_SCALING_VOLUME;
-            }
-
-            if(lightpos & LEFT_SIDE)
-                this.scaling[REAR_LEFT] = sound_settings::PLAYBACK_SCALING_VOLUME;
-
-            if(lightpos & RIGHT_SIDE)
-                this.scaling[REAR_RIGHT] = sound_settings::PLAYBACK_SCALING_VOLUME;
+            this.scaling[REAR_LEFT] = sound_settings::PLAYBACK_SCALING_VOLUME;
+            this.scaling[REAR_RIGHT] = sound_settings::PLAYBACK_SCALING_VOLUME;
         }
 
         void play(time tstart)
