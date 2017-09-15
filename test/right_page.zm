@@ -36,7 +36,7 @@ Page right_page
             init()
             {
 //                fill_pattern_color = TEST_PAGE_STIMULUS_COLOR;
-                size = 400, 400;
+                size = 800, 800;
                 offset_x = width / 2;
                 offset_y = height / 2;
             }
@@ -46,7 +46,7 @@ Page right_page
             {
                 init()
                 {
-                    radius = 100;
+                    radius = 200;
                     line_width = 10;
                     line_pattern_color = color:black;
                     fill_pattern_color = color:orangered;
