@@ -1,25 +1,25 @@
 /******************************************************************************\
-FILE:           test_handler.zm
+FILE:           fam_handler.zm
 AUTHOR:         Theo Veenker <theo.veenker@beexy.nl>
 ADAPTED BY:     -
 
 DESCRIPTION:
 
 Provides a state machine to handle the head-turn procedure contingency for
-both the lights and auditory stimuli. It controls the lights through the
-experiment control page.
+the lights only. Once started the auditory stimuli continue independently.
+It controls the lights through the experiment control page.
 
 
 HISTORY:
 2012-02-20 TV   Created.
-2017-01-09 TV   Adapted for Zep 2.0.
+2017-05-26 TV   Adapted for Zep 2.0.
 
 \******************************************************************************/
 
 import std_sound_output_device;
-import front_page;
-import left_page;
-import right_page;
+import test::front_page;
+import test::left_page;
+import test::right_page;
 
 
 // Symbolic definition of responses/events.
@@ -28,7 +28,7 @@ enum TestEvent {
     RESPONSE_HALT,
     AUDIO_START,
     AUDIO_FINISH
-};
+}
 
 
 State test_handler
@@ -36,7 +36,10 @@ State test_handler
     TestItem    item;           // trial control parameters
 
     Direction   lightpos;       // which side light is presented
-    int         samesidecount;  // left-right count
+
+    int         leftsidecount;
+    int         rightsidecount;
+
     bool        running;        // set at first 'looking' for first trial
 
 
@@ -58,18 +61,18 @@ State test_handler
 
     void start_light(int mask)
     {
-        if (mask & FRONT_SIDE) front_page.show_animation();
-        if (mask & LEFT_SIDE) left_page.show_animation();
-        if (mask & RIGHT_SIDE) right_page.show_animation();
+        if (mask & FRONT_SIDE) test::front_page.show_animation();
+        if (mask & LEFT_SIDE) test::left_page.show_animation();
+        if (mask & RIGHT_SIDE) test::right_page.show_animation();
         control.start_light(mask);
     }
 
 
     void stop_light(int mask)
     {
-        if (mask & FRONT_SIDE) front_page.hide_animation();
-        if (mask & LEFT_SIDE) left_page.hide_animation();
-        if (mask & RIGHT_SIDE) right_page.hide_animation();
+        if (mask & FRONT_SIDE) test::front_page.hide_animation();
+        if (mask & LEFT_SIDE) test::left_page.hide_animation();
+        if (mask & RIGHT_SIDE) test::right_page.hide_animation();
         control.stop_light(mask);
     }
 
@@ -85,12 +88,12 @@ State test_handler
         on_event:message()
         {
             if (message_arg == RESPONSE_GO)
-                front.enter();
+                attention_resetting.enter();
         }
     }
 
 
-    State front
+    State attention_resetting
     {
         on_event:entry()
         {
@@ -104,46 +107,50 @@ State test_handler
         on_event:message()
         {
             if (message_arg == RESPONSE_GO)
-                side.enter();
+                stimulus_presentation.enter();
         }
     }
 
 
-    State side
+    State stimulus_presentation
     {
         on_event:entry()
         {
-            if (random(1000) >= 500)
-            {
-                if (lightpos == LEFT_SIDE)
-                    samesidecount++;
-                else
-                    samesidecount = 1;
-                lightpos = LEFT_SIDE;
-                if (samesidecount > MAX_SAME_SIDE)
-                {
-                    samesidecount = 1;
-                    lightpos = RIGHT_SIDE;
-                }
-            }
+            if( item.sound_direction & PSEUDO_RANDOM_SIDE )
+                set_pseudorandom_light_position();
             else
-            {
-                if (lightpos == RIGHT_SIDE)
-                    samesidecount++;
-                else
-                    samesidecount = 1;
-                lightpos = RIGHT_SIDE;
-                if (samesidecount > MAX_SAME_SIDE)
-                {
-                    samesidecount = 1;
-                    lightpos = LEFT_SIDE;
-                }
-            }
+                lightpos = item.sound_direction;
 
             stop_light(FRONT_SIDE);
             start_light(lightpos);
         }
 
+        // set the next lightposition pseudorandom (limit max repeats on one side)
+        void set_pseudorandom_light_position()
+        {
+
+            // Determine by chance the next side
+            Direction next_lightpos;
+            if (random(1000) >= 500)
+                next_lightpos = RIGHT_SIDE;
+            else
+                next_lightpos = LEFT_SIDE;
+
+            if( ( leftsidecount - rightsidecount ) > MAX_SAME_SIDE ) // force right side
+                next_lightpos = RIGHT_SIDE;
+
+            if( ( rightsidecount - leftsidecount ) > MAX_SAME_SIDE ) // force left side
+                next_lightpos = LEFT_SIDE;
+
+            // Increment counter if it's a repeat of the side
+            if(next_lightpos == RIGHT_SIDE) // counter of a repeat of a side.
+                rightsidecount++;
+            if(next_lightpos == LEFT_SIDE) // counter of a repeat of a side.
+                leftsidecount++;
+
+            //set the new lightpos
+            lightpos =  next_lightpos;
+        }
 
         on_event:message()
         {
@@ -226,7 +233,7 @@ State test_handler
     {
         init()
         {
-            num_channels = 2;
+//            num_channels = 2;
         }
 
 
@@ -243,7 +250,7 @@ State test_handler
 
         on_event:finish()
         {
-            control.hide_speaker_icon(FRONT_SIDE | LEFT_SIDE | RIGHT_SIDE);
+            control.hide_speaker_icon(FRONT_SIDE | LEFT_SIDE | RIGHT_SIDE );
             control.update_clock(event_time);
             done(CONTINUE);
         }
@@ -255,18 +262,6 @@ State test_handler
 
             device = sound_output_device;
             clip.file = stimuli_dir() + "sounds/" + item.sndfn;
-            if (lightpos == LEFT_SIDE)
-            {
-                scaling[0] = 1.0;
-                scaling[1] = 0.0;
-            }
-            else if (lightpos == RIGHT_SIDE)
-            {
-                scaling[0] = 0.0;
-                scaling[1] = 1.0;
-            }
-            else
-                scaling_all = 1.0;
 
             start(tstart);
         }
@@ -293,8 +288,8 @@ State test_handler
         control.target = this;
         control.disable_buttons();
         control.disable_keys();
-        control.enable_button(BUTTON_GO, RESPONSE_GO);
-        control.enable_button(BUTTON_HALT, RESPONSE_HALT);
+        control.enable_button(test::BUTTON_GO, RESPONSE_GO);
+        control.enable_button(test::BUTTON_HALT, RESPONSE_HALT);
         control.enable_key(KEY_Return, RESPONSE_GO);
         control.enable_key(KEY_Escape, RESPONSE_HALT);
 
@@ -324,18 +319,16 @@ State test_handler
         // Save the passed trial control parameters.
         item = it;
 
-
         // The first subtrial (audio stimulus played) will be started at
         // first looking at the target side light. Then we become 'running'.
         // See state machine above. All subsequent subtrials are ITI apart.
         if (running) audio.play(tref + INTERSTIMULUS_INTERVAL);
 
-
         // Show pages representing the front and side lights on the appropriate
         // test windows.
-        test_window1.show_page(front_page);
-        test_window2.show_page(left_page);
-        test_window3.show_page(right_page);
+        test_window1.show_page(test::front_page);
+        test_window2.show_page(test::left_page);
+        test_window3.show_page(test::right_page);
 
 
         // Update status line on control window. Cleared in done() above.

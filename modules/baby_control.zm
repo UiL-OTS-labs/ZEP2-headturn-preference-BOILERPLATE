@@ -80,8 +80,7 @@ enum Direction
     LEFT_SIDE           = 2, // left side (from camera POV)
     RIGHT_SIDE          = 4, // right side (from camera POV)
     LEFT_AND_RIGHT_SIDE = 6, // left AND RIGHT side
-    RANDOM              = 0, // let the system decide
-    ALL                 = 7, // left, right and front side.
+    PSEUDO_RANDOM_SIDE  = 8, // let the system decide randomly
 }
 
 
