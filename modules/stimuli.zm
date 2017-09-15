@@ -69,6 +69,13 @@ int check_stimuli_list(TestItem[] stimuli_list)
             ctrl_window.show_error("Soundfile '" + stimuli_list[index].sndfn + "' is not readable. Does it exist?");
             return ERROR;
         }
+
+        if( !file_readable(full_filename) )
+        {
+            ctrl_window.show_error("Soundfile '" + stimuli_list[index].sndfn + "' is not readable. Does it exist?");
+            return ERROR;
+        }
+
         index = index + 1;
     }
 

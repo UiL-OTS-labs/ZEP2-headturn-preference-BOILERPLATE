@@ -280,6 +280,8 @@ State test_handler
 
             clip.file = stimuli_dir() + "sounds/" + item.sndfn;
 
+            multichannel_sound_output_device.validate_sample_rate(clip);
+
             setup_channels();
             start(tstart);
         }

@@ -57,12 +57,6 @@ State fam_handler
         control.erase_clock();
     }
 
-    on_event:message()
-    {
-        if(message_arg==AUDIO_START)
-            println("DID THE AUDIO JUST START?!");
-    }
-
     void start_light(int mask)
     {
         if (mask & FRONT_SIDE) test::front_page.show_animation();
@@ -283,6 +277,8 @@ State fam_handler
             device = multichannel_sound_output_device;
 
             clip.file = stimuli_dir() + "sounds/" + item.sndfn;
+
+            multichannel_sound_output_device.validate_sample_rate(clip);
 
             setup_channels();
             start(tstart);
