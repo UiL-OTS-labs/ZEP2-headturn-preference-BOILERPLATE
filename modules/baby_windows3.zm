@@ -860,7 +860,6 @@ void setup_windows()
     ctrl_window.activate();
 
     position_test_windows();
-    control.show_thumbnail(test_window1, test_window2, test_window3);
 }
 
 

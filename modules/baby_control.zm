@@ -19,7 +19,7 @@ HISTORY:
 
 
 import std_display;
-import std_defs;
+import std_constants;
 import baby_control_colors;
 import std_baby_control_fonts;
 import std_res_browser;
