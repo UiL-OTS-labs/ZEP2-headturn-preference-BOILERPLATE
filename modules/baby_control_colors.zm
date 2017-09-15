@@ -19,7 +19,7 @@ HISTORY:
 
 // Colors used on control page etc.
 const color     CONTROL_COLOR                   = color:gray10;
-const color     CONTROL_CANVAS_COLOR            = color:chartreuse;
+const color     CONTROL_CANVAS_COLOR            = color:blue;
 const color     CONTROL_INFO_COLOR              = color:gainsboro;
 const color     CONTROL_INFO_TEXT_COLOR         = color:gray80;
 const color     CONTROL_INFO_TEXT_ALERT_COLOR   = color:red;
