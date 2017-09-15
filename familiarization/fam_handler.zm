@@ -16,7 +16,6 @@ HISTORY:
 
 \******************************************************************************/
 
-import std_sound_output_device;
 import test::front_page;
 import test::left_page;
 import test::right_page;
@@ -58,6 +57,11 @@ State fam_handler
         control.erase_clock();
     }
 
+    on_event:message()
+    {
+        if(message_arg==AUDIO_START)
+            println("DID THE AUDIO JUST START?!");
+    }
 
     void start_light(int mask)
     {
@@ -233,7 +237,7 @@ State fam_handler
     {
         init()
         {
-//            num_channels = 2;
+            num_channels = sound_settings::PLAYBACK_NUM_CHANNELS;
         }
 
 
@@ -250,19 +254,37 @@ State fam_handler
 
         on_event:finish()
         {
-            control.hide_speaker_icon(FRONT_SIDE | LEFT_SIDE | RIGHT_SIDE );
+            control.hide_speaker_icon(LEFT_SIDE | RIGHT_SIDE);
             control.update_clock(event_time);
             done(CONTINUE);
         }
 
+        void setup_channels()
+        {
+            this.scaling_all = 0;
+
+            if(lightpos & FRONT_SIDE)
+            {
+                 this.scaling[FRONT_RIGHT] = sound_settings::PLAYBACK_SCALING_VOLUME;
+                 this.scaling[FRONT_LEFT] = sound_settings::PLAYBACK_SCALING_VOLUME;
+            }
+
+            if(lightpos & LEFT_SIDE)
+                this.scaling[REAR_LEFT] = sound_settings::PLAYBACK_SCALING_VOLUME;
+
+            if(lightpos & RIGHT_SIDE)
+                this.scaling[REAR_RIGHT] = sound_settings::PLAYBACK_SCALING_VOLUME;
+        }
 
         void play(time tstart)
         {
             abort();
 
-            device = sound_output_device;
+            device = multichannel_sound_output_device;
+
             clip.file = stimuli_dir() + "sounds/" + item.sndfn;
 
+            setup_channels();
             start(tstart);
         }
     }

@@ -1,5 +1,5 @@
 /******************************************************************************\
-FILE:           fam_handler.zm
+FILE:           test_handler.zm
 AUTHOR:         Theo Veenker <theo.veenker@beexy.nl>
 ADAPTED BY:     -
 
@@ -16,7 +16,7 @@ HISTORY:
 
 \******************************************************************************/
 
-import std_sound_output_device;
+import multichannel_sound_output_device;
 import test::front_page;
 import test::left_page;
 import test::right_page;
@@ -116,7 +116,7 @@ State test_handler
     {
         on_event:entry()
         {
-            if( item.sound_direction & PSEUDO_RANDOM_SIDE )
+            if( item.sound_direction == PSEUDO_RANDOM_SIDE )
                 set_pseudorandom_light_position();
             else
                 lightpos = item.sound_direction;
@@ -233,7 +233,7 @@ State test_handler
     {
         init()
         {
-//            num_channels = 2;
+            num_channels = sound_settings::PLAYBACK_NUM_CHANNELS;
         }
 
 
@@ -250,23 +250,40 @@ State test_handler
 
         on_event:finish()
         {
-            control.hide_speaker_icon(FRONT_SIDE | LEFT_SIDE | RIGHT_SIDE );
+            control.hide_speaker_icon(LEFT_SIDE | RIGHT_SIDE);
             control.update_clock(event_time);
             done(CONTINUE);
         }
 
+        void setup_channels()
+        {
+            this.scaling_all = 0;
+
+            if(lightpos & FRONT_SIDE)
+            {
+                 this.scaling[FRONT_RIGHT] = sound_settings::PLAYBACK_SCALING_VOLUME;
+                 this.scaling[FRONT_LEFT] = sound_settings::PLAYBACK_SCALING_VOLUME;
+            }
+
+            if(lightpos & LEFT_SIDE)
+                this.scaling[REAR_LEFT] = sound_settings::PLAYBACK_SCALING_VOLUME;
+
+            if(lightpos & RIGHT_SIDE)
+                this.scaling[REAR_RIGHT] = sound_settings::PLAYBACK_SCALING_VOLUME;
+        }
 
         void play(time tstart)
         {
             abort();
 
-            device = sound_output_device;
+            device = multichannel_sound_output_device;
+
             clip.file = stimuli_dir() + "sounds/" + item.sndfn;
 
+            setup_channels();
             start(tstart);
         }
     }
-
 
     // Signals the initiator of the trial that we're done.
     void done(int msgid)

@@ -24,15 +24,16 @@ HISTORY:
 
 requires 2.0;
 
+
 // Default/Standard modules
 import std_entry_page2;
 import std_exit_page2;
-import std_sound_playback;
 import io_beexybox;         // Enable to use BeexyBox response box.
 
 // Custom modules
 import baby_windows3;
 import stimuli;
+import multichannel_sound_output_device;
 import familiarization::task;
 import test::task;
 
@@ -105,15 +106,37 @@ Experiment experiment
 
             // In 2s start playing a (baby song) sound file.
             sound_playback.scaling_all = 1.0;
-            sound_playback.play(stimuli_dir() + "sounds/music.wav",
-                now() + 2s);
+            sound_playback.play("music.wav", now() + 2s);
 
             control.target = this;
             control.disable_buttons();
             control.disable_keys();
-//            control.enable_key(KEY_Return);
-//            control.enable_key(' ');
             control.enable_key(KEY_Escape);
+        }
+
+        on_event:exit()
+        {
+            multichannel_sound_output_device.close();
+        }
+    }
+
+    SoundPlayback sound_playback
+    {
+        init()
+        {}
+
+
+        // Sound source/producer object.
+        SoundFile clip {}
+
+        void play(string filename, time tstart)
+        {
+            abort();
+
+            device = multichannel_sound_output_device;
+            clip.file = stimuli_dir() + "sounds/" + filename;
+
+            start(tstart);
         }
     }
 }

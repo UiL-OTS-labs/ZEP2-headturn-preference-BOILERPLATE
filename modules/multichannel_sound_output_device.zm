@@ -1,0 +1,68 @@
+/******************************************************************************\
+FILE:           std_sound_output_device.zm
+AUTHOR:         Theo Veenker <theo.veenker@beexy.nl>
+ADAPTED BY:     -
+
+DESCRIPTION:
+
+Provides a sound output device object. The device will be opened at
+initialization time.
+
+HISTORY:
+2017-01-01 TV   Initial version for Zep 2.0
+2017-09-15 CvR  Adjust settings for ASUS XS cards (multichannel)
+
+\******************************************************************************/
+
+
+plugin zep_sound;
+
+import sound_settings;
+
+enum SoundChannel {
+    FRONT_LEFT  = 0,
+    FRONT_RIGHT = 1,
+    REAR_LEFT   = 2,
+    REAR_RIGHT  = 3,
+}
+
+SoundPlaybackDevice multichannel_sound_output_device
+{
+    init()
+    {
+        open(
+            sound_settings::PLAYBACK_NUM_CHANNELS,
+            sound_settings::PLAYBACK_SAMPLE_RATE,
+            sound_settings::PLAYBACK_DEVICE_ID,
+            sound_settings::PLAYBACK_LATENCY
+        );
+        if (error())
+        {
+            print_error("!! Error - failed to open sound device !!\n");
+            flush_error();
+            terminate;
+        }
+    }
+
+    // Compares the samplerate of the SoundFile to the one setup for the device
+    // A missmatch can be dangerous since it will likely change the tonation of
+    // the WAV file.
+    bool validate_sample_rate(SoundFile clip)
+    {
+        if(clip.file_samplerate != this.samplerate)
+        {
+            print_error("!! Warning - sound file and sound device set to different samplerates!");
+            print_error(
+                string(clip.file_samplerate)
+                + "Hz: " + clip.file
+            );
+            print_error(
+                string(multichannel_sound_output_device.samplerate)
+                + "Hz: sound device("
+                + multichannel_sound_output_device.id + ")"
+            );
+            return false;
+        }
+        return true;
+    }
+}
