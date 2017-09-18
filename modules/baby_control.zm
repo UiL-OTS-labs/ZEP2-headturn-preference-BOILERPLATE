@@ -14,6 +14,7 @@ allowing the control window to be used as an overlay on the camera video.
 
 HISTORY:
 2017-01-01 TV   Initial version for Zep 2.0
+2017-09-18 CvR  Adapted for UiL-OTS setup
 
 \******************************************************************************/
 
