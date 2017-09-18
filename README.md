@@ -34,18 +34,6 @@ Output test phase: looking time.
 ## Preview Experiment
 Included in this repository is a preview video of a single run of the experiment.
 
-## About the Hardware Setup
-Optimally, the setup should use a _single_ graphical card that supports at least five monitor outputs. Using more than one graphical card leads to asynchronous visual blanks and minor visual artifacts. A _stimulus-presentation computer_ should have this card installed along with an good-quality sound card. The stimulus-presentation computer should output to five monitors. One to the researcher, three to the participant (i.e. left, middle, right) and one to a video-capture card in a _recording computer_. The researcher-display signal and the video-capture signal should be duplicates. The recording computer can then apply a chroma-key to the display signal, overlay it on a video feed and save the result for [off-line analysis](https://github.com/UiL-OTS-labs-backoffice/UiL-OTS-Video-Coding-System). To get the multi-head setup to function under Kubuntu (Linux/GNU OS) we had to use the Nvidia's [baseMosaic](http://nvidia.custhelp.com/app/answers/detail/a_id/3580/~/how-to-configure-mosaic-on-linux) feature.
-
-The critical hardware/software used in the UiL-OTS lab is as follows:
-*   3 x Nvidia NVS 310 GPUs (though we recommend using a single NVS 810 instead)
-*   Asus Xonar Dx (sound card)
-*   BlackMagic Decklink (video-capture card)
-*   Logitech Webcam C920
-*   Open Broadcaster Studio (software)
-*   Zep 2.0.9
-
-
 ## About Zep
 For information on running the experiment and extracting the experiment
 results please go the Zep website at <http://www.beexy.nl/zep> and check
@@ -65,6 +53,20 @@ _Edit stimuli lists_. Every line represents one experiment trial. Each variable 
     *   `PSEUDO_RANDOM_SIDE`: pseudo-random side with the restriction that one side not allowed more than twice in a row. Note that this does not count manually set sides.
 
 _Fine tune your hardware setup_. As mentioned above a quad-head setup is required (four monitors). Window- and head -linking settings is read from `modules/baby_windows3_settings.zm`. You can find out the order of heads and location by running `zepdpyinfo` in a terminal. Sound settings are in `modules/sound_settings.zm`. You can find out the specifics of the sound card(s) installed by running `zepsndinfo` in a terminal. This script assumes that the order of channels are front left, front right, rear/side left, rear/side right.
+
+## About the Hardware Setup
+Optimally, the setup should use a _single_ graphical card that supports at least five monitor outputs. Using more than one graphical card leads to asynchronous visual blanks and minor visual artifacts. A _stimulus-presentation computer_ should have this card installed along with an good-quality sound card. The stimulus-presentation computer should output to five monitors. One to the researcher, three to the participant (i.e. left, middle, right) and one to a video-capture card in a _recording computer_. The researcher-display signal and the video-capture signal should be duplicates. The recording computer can then apply a chroma-key to the display signal, overlay it on a video feed and save the result for [off-line analysis](https://github.com/UiL-OTS-labs-backoffice/UiL-OTS-Video-Coding-System). To get the multi-head setup to function under Kubuntu (Linux/GNU OS) we had to use the Nvidia's [baseMosaic](http://nvidia.custhelp.com/app/answers/detail/a_id/3580/~/how-to-configure-mosaic-on-linux) feature.
+
+The critical hardware/software used in the UiL-OTS lab is as follows:
+*   3 x Nvidia NVS 310 GPUs (though we recommend using a single NVS 810 instead)
+*   Asus Xonar Dx (sound card)
+*   BlackMagic Decklink (video-capture card)
+*   Logitech Webcam C920
+*   Open Broadcaster Studio (software)
+*   Zep 2.0.9
+
+![Hardware Setup](.hardware_setup.jpg)
+
 
 ## References
 *   Kemler-Nelson, D. G., Jusczyk, P. W., Mandel, D. R., Myers, J., Turk, A. & Gerken, L. (1995). The Head-turn Preference Procedure for testing auditory perception. Infant Behavior and Development 18, 111-116. [doi](https://doi.org/10.1016/0163-638395900128)
