@@ -261,6 +261,7 @@ Page control
                     width = THUMBNAIL_WIDTH;
                     height = THUMBNAIL_HEIGHT;
                     is_visible = true;
+                    filter = PATTERN_FILTER_FAST;
                 }
 
                 void disable()
@@ -277,6 +278,7 @@ Page control
                     width = THUMBNAIL_WIDTH;
                     height = THUMBNAIL_HEIGHT;
                     is_visible = true;
+                    filter = PATTERN_FILTER_FAST;
                 }
 
                 void disable()
@@ -293,6 +295,7 @@ Page control
                     width = THUMBNAIL_WIDTH;
                     height = THUMBNAIL_HEIGHT;
                     is_visible = true;
+                    filter = PATTERN_FILTER_FAST;
                 }
 
                 void disable()
