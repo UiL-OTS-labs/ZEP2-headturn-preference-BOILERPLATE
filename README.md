@@ -32,7 +32,7 @@ Output familiarization phase: total looking time.
 Output test phase: looking time.
 
 ## Preview Experiment
-Included in this repository is a [preview video](./PREVIEW_HEADTURN_EXPERIMENT.mp4) of a single run of the experiment.
+Included in this repository is a preview video of a single run of the experiment.
 
 ## About the Hardware Setup
 Optimally, the setup should use a _single_ graphical card that supports at least five monitor outputs. Using more than one graphical card leads to asynchronous visual blanks and minor visual artifacts. A _stimulus-presentation computer_ should have this card installed along with an good-quality sound card. The stimulus-presentation computer should output to five monitors. One to the researcher, three to the participant (i.e. left, middle, right) and one to a video-capture card in a _recording computer_. The researcher-display signal and the video-capture signal should be duplicates. The recording computer can then apply a chroma-key to the display signal, overlay it on a video feed and save the result for [off-line analysis](https://github.com/UiL-OTS-labs-backoffice/UiL-OTS-Video-Coding-System). To get the multi-head setup to function under Kubuntu (Linux/GNU OS) we had to use the Nvidia's [baseMosaic](http://nvidia.custhelp.com/app/answers/detail/a_id/3580/~/how-to-configure-mosaic-on-linux) feature.
