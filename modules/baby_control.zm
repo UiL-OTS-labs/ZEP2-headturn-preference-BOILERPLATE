@@ -230,11 +230,12 @@ Page control
                 right_speaker_icon.offset_y = right_light_icon.offset_y + 100;
 
                 // Set thumbnail locations
-                // Middle
-                thumbnail_window1.offset_x = actual_width/2 - (THUMBNAIL_WIDTH/2);
+                // Left thumbnail
+                thumbnail_window1.offset_x = 0;
                 thumbnail_window1.offset_y = actual_height - THUMBNAIL_HEIGHT;
-                //Left
-                thumbnail_window2.offset_x = 0;
+
+                //Middle thumbnail
+                thumbnail_window2.offset_x =  actual_width/2 - (THUMBNAIL_WIDTH/2);
                 thumbnail_window2.offset_y = thumbnail_window1.offset_y;
                 //Right
                 thumbnail_window3.offset_x = actual_width - THUMBNAIL_WIDTH;
