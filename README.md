@@ -22,6 +22,9 @@ precedes the test phase a similar contingency procedure is used but
 only for the lights; the sound stimuli once started continue until
 all have been presented.
 
+The researcher indicates a look start by pressing the `RETURN` key and a look end by pressing the `ESCAPE`.
+This can alternatively be done via the BeexyBox B.
+
 In this implementation the front and side lights will be presented
 via three computer monitors. Therefore this implementation requires
 a quad head videocard.
@@ -62,6 +65,7 @@ The critical hardware/software used in the UiL-OTS lab is as follows:
 *   Asus Xonar Dx (sound card)
 *   BlackMagic Decklink (video-capture card)
 *   Logitech Webcam C920
+*   BeexyBox B (response box; alternatively one can use the keyboard)
 *   Open Broadcaster Studio (software)
 *   Zep 2.0.9
 
