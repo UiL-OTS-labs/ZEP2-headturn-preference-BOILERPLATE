@@ -22,17 +22,19 @@ precedes the test phase a similar contingency procedure is used but
 only for the lights; the sound stimuli once started continue until
 all have been presented.
 
-The researcher indicates a look start by pressing the `RETURN` key and a look end by pressing the `ESCAPE`.
-This can alternatively be done via the BeexyBox B.
+The researcher indicates a look start by pressing the `RETURN` key and a look end
+by pressing the `ESCAPE`. This can alternatively be done via the BeexyBox B.
 
 In this implementation the front and side lights will be presented
 via three computer monitors. Therefore this implementation requires
 a quad head videocard.
 
-The familiarization-items presentation order is random. The test-items order is pseudorandomized such that there are never more than three of novel-type items (NOVEL) or familiar-type items (FAMIL) that appear in sequence.
+The familiarization-items presentation order is random. The test-items order is
+pseudorandomized such that there are never more than two of novel-type items (NOVEL)
+or familiar-type items (FAMIL) that appear in sequence.
 
-Output familiarization phase: total looking time.
-Output test phase: looking time.
+Output familiarization phase: looking time, not looking time, number look aways
+Output test phase:  looking time, not looking time, number look aways
 
 ## Preview Experiment
 Included in this repository is a preview video of a single run of the experiment.
@@ -44,6 +46,8 @@ out the documentation section. There you'll also find explanations and
 instructions that help you understand and modify a Zep experiment.
 
 ## Modifying or Customizing this Experiment
+_Config Looking Times_. For maximum looking-time settings see `test/defs.zm` and `familiarization/defs.zm`.
+
 _Add stimuli_. Add the WAV sound files to `stimuli/sounds` directory and edit the stimuli lists at `stimuli/[...].csv`
 
 _Edit stimuli lists_. Every line represents one experiment trial. Each variable separates by a semicolon (`;`).
