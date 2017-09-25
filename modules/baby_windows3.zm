@@ -871,6 +871,9 @@ void show_test_windows()
     test_window3.show();
     test_window2.show();
     test_window1.show();
+
+    ctrl_window.hide();
+    ctrl_window.show();
 }
 
 
