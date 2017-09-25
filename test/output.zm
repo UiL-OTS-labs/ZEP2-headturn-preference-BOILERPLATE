@@ -27,6 +27,8 @@ record TestOutput
     ItemType    type;           // item type
     string      sndfn;          // stimulus sound file
 
+    Direction   snd_direction;  // stimulus direction
+
     int         lt;             // looking time [ms]
     int         nlt;            // not looking time [ms]
     int         lookaways;      // number of times looked away
@@ -59,6 +61,9 @@ void test_output_append(TestOutput data)
     expdb.set_trial_data_string_field("sndfn", data.sndfn,
         "stimulus sound file");
 
+    expdb.set_trial_data_enum_field("snd_direction", string(data.snd_direction),
+        "sound direction");
+
     expdb.set_trial_data_int_field("lt", data.lt,
         "looking time [ms]");
 
@@ -71,7 +76,7 @@ void test_output_append(TestOutput data)
 
 
 // Appends array of looking/not-looking times to look-nolook output table.
-void looknolook_output_append(int trialnum)
+void looknolook_output_append(TestOutput data)
 {
     int nstamps = control.clock.timestamps.size - 1;
 
@@ -88,8 +93,17 @@ void looknolook_output_append(int trialnum)
         // Set column values of the trial data record. The descriptions (final
         // arguments) are optional but recommended.
 
-        expdb.set_trial_data_int_field("trialnum", trialnum,
+        expdb.set_trial_data_int_field("trialnum", data.trialnum,
             "trial number");
+
+        expdb.set_trial_data_string_field("sndfn", data.sndfn,
+            "stimulus sound file");
+
+        expdb.set_trial_data_enum_field("snd_direction", string(data.snd_direction),
+            "sound direction");
+
+        expdb.set_trial_data_enum_field("type", string(data.type),
+            "item type");
 
         expdb.set_trial_data_int_field("d",
             int(control.clock.timestamps[i+1] - lasttimestamp),

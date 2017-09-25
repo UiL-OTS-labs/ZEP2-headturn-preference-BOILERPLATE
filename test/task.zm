@@ -76,15 +76,17 @@ Block task
                 output.trialnum = test.cycle + 1;
                 output.id = item.id;
                 output.type = item.type;
+                output.snd_direction = test_handler.lightpos;
                 output.sndfn = item.sndfn;
                 output.lt = int(control.clock.duration);
                 output.nlt =
                     int(control.clock.total_runtime - control.clock.duration);
                 output.lookaways = (control.clock.timestamps.size - 1) / 2;
+
                 test_output_append(output);
 
                 // Also save look/no-look durations.
-                looknolook_output_append(output.trialnum);
+                looknolook_output_append(output);
             }
 
 
