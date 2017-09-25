@@ -107,7 +107,7 @@ Experiment experiment
 
             // In 2s start playing a (baby song) sound file.
             sound_playback.scaling_all = 1.0;
-            sound_playback.play("music.wav", now() + 2s);
+            sound_playback.looper.start(now()+2s);
 
             control.target = this;
             control.disable_buttons();
@@ -118,6 +118,8 @@ Experiment experiment
         on_event:exit()
         {
             multichannel_sound_output_device.close();
+            sound_playback.looper.abort();
+            sound_playback.abort();
         }
     }
 
@@ -138,6 +140,14 @@ Experiment experiment
             clip.file = stimuli_dir() + "sounds/" + filename;
 
             start(tstart);
+        }
+
+        Timer looper {
+            on_event:expire()
+            {
+                sound_playback.play("music.wav", event_time);
+                looper.start(sound_playback.expected_finish_time + 5s);
+            }
         }
     }
 }
