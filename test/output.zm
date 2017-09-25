@@ -96,14 +96,14 @@ void looknolook_output_append(TestOutput data)
         expdb.set_trial_data_int_field("trialnum", data.trialnum,
             "trial number");
 
+        expdb.set_trial_data_enum_field("type", string(data.type),
+            "item type");
+
         expdb.set_trial_data_string_field("sndfn", data.sndfn,
             "stimulus sound file");
 
         expdb.set_trial_data_enum_field("snd_direction", string(data.snd_direction),
             "sound direction");
-
-        expdb.set_trial_data_enum_field("type", string(data.type),
-            "item type");
 
         expdb.set_trial_data_int_field("d",
             int(control.clock.timestamps[i+1] - lasttimestamp),
