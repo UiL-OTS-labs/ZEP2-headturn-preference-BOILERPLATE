@@ -1,5 +1,6 @@
 # Head-turn Preference Procedure
-You can find the source-code for this experiment at [GitHub](https://github.com/UiL-OTS-labs/ZEP2-headturn-preference-BOILERPLATE).
+You can find the source-code for this experiment at
+[GitHub](https://github.com/UiL-OTS-labs/ZEP2-headturn-preference-BOILERPLATE).
 *   Originally authored by: [Theo Veenker](theo.veenker@beexy.nl)
 *   Adapted by: [Chris van Run](C.P.A.vanrun@uu.nl)
 *   For client: [Maartje de Klerk](https://www.uu.nl/medewerkers/MdeKlerk/0)
@@ -24,6 +25,7 @@ presented.
 The researcher indicates a look start by pressing the `RETURN` key and a look
 end by pressing the `ESCAPE`. This can alternatively be done via the BeexyBox B.
 
+## Output
 In this implementation the front and side lights will be presented via three
 computer monitors. Therefore this implementation requires a quad head videocard.
 
@@ -31,8 +33,19 @@ The familiarization-items presentation order is random. The test-items order is
 pseudorandomized such that there are never more than two of novel-type items
 (NOVEL) or familiar-type items (FAMIL) that appear in sequence.
 
-Output familiarization phase: looking time, not looking time, number look aways
-Output test phase:  looking time, not looking time, number look aways
+Generate output in comma-separated files by running `zepdb2extract`.
+
+Output familiarization phase:
+*   *Table 1*: looking time, not looking time, number of look aways (summary).
+*   *Table 2*: individual looking and no-looking epochs without stimuli details.
+
+Output test phase:
+*   *Table 1*: stimuli details, looking time, not looking time, number of look
+    aways (summary).
+*   *Table 2*: looking/no-looking epochs per trial including stimuli details and
+    duration.
+
+
 
 ## Preview Experiment
 Included in this repository is a preview video of a single run of the experiment.
@@ -44,13 +57,13 @@ out the documentation section. There you'll also find explanations and
 instructions that help you understand and modify a Zep experiment.
 
 ## Modifying or Customizing this Experiment
-_Config Looking Times_. For maximum looking-time settings see `test/defs.zm` and
+*Config Looking Times*. For maximum looking-time settings see `test/defs.zm` and
 `familiarization/defs.zm`.
 
-_Add stimuli_. Add the WAV sound files to `stimuli/sounds` directory and edit the
+*Add stimuli*. Add the WAV sound files to `stimuli/sounds` directory and edit the
 stimuli lists at `stimuli/EXAMPLE.csv`
 
-_Edit stimuli lists_. Every line represents one experiment trial. Each variable
+*Edit stimuli lists*. Every line represents one experiment trial. Each variable
 separates by a semicolon (`;`).
 *   `id` is a unique reference for human convenience. `
 *   `type` is either NOVEL or FAMIL.
@@ -64,7 +77,7 @@ separates by a semicolon (`;`).
         side not allowed more than twice in a row. Note that this does not count
         manually set sides.
 
-_Fine tune your hardware setup_. As mentioned above a quad-head setup is
+*Fine tune your hardware setup*. As mentioned above a quad-head setup is
 required (four monitors). Window- and head -linking settings is read from
 `modules/baby_windows3_settings.zm`. You can find out the order of heads and
 location by running `zepdpyinfo` in a terminal. Sound settings are in
@@ -73,13 +86,13 @@ installed by running `zepsndinfo` in a terminal. This script assumes that the
 order of channels are front left, front right, rear/side left, rear/side right.
 
 ## About the Hardware Setup
-Optimally, the setup should use a _single_ graphical card that supports at least
+Optimally, the setup should use a *single* graphical card that supports at least
 five monitor outputs. Using more than one graphical card leads to asynchronous
-visual blanks and minor visual artifacts. A _stimulus-presentation computer_
+visual blanks and minor visual artifacts. A *stimulus-presentation computer*
 should have this card installed along with an good-quality sound card. The
 stimulus-presentation computer should output to five monitors. One to the
 researcher, three to the participant (i.e. left, middle, right) and one to a
-video-capture card in a _recording computer_. The researcher-display signal and
+video-capture card in a *recording computer*. The researcher-display signal and
 the video-capture signal should be duplicates. The recording computer can then
 apply a chroma-key to the display signal, overlay it on a video feed and save
 the result for [off-line
@@ -102,9 +115,13 @@ The critical hardware/software used in the UiL-OTS lab is as follows:
 
 
 ## References
-*   Kemler-Nelson, D. G., Jusczyk, P. W., Mandel, D. R., Myers, J., Turk, A. & Gerken, L. (1995). The Head-turn Preference Procedure for testing auditory perception. Infant Behavior and Development 18, 111-116. [doi](https://doi.org/10.1016/0163-638395900128)
+*   Kemler-Nelson, D. G., Jusczyk, P. W., Mandel, D. R., Myers, J., Turk, A. &
+    Gerken, L. (1995). The Head-turn Preference Procedure for testing auditory
+    perception. Infant Behavior and Development 18, 111-116.
+    [doi](https://doi.org/10.1016/0163-638395900128)
 *   KERKHOFF, A., DE BREE, E., DE KLERK, M., & WIJNEN, F. (2013). Non-adjacent
-dependency learning in infants at familial risk of dyslexia. Journal of Child Language, 40(1), 11-28. [doi](https://doi.org/10.1017/S0305000912000098)
+    dependency learning in infants at familial risk of dyslexia. Journal of Child
+    Language, 40(1), 11-28. [doi](https://doi.org/10.1017/S0305000912000098)
 
 ## Disclaimer
 This experiment script is released under the terms of the GNU General Public
