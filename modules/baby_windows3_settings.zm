@@ -12,13 +12,13 @@ const int CTRL_WINDOW_TARGET_HEAD = 0;
 // CTRL_WINDOW target head.
 
 // Front Monitor/Display/Screen
-const int TEST_WINDOW1_TARGET_HEAD = 4;
+const int TEST_WINDOW1_TARGET_HEAD = 3;
 
 // Left Monitor/Display/Screen
 const int TEST_WINDOW2_TARGET_HEAD = 2;
 
 // Right Monitor/Display/Screen
-const int TEST_WINDOW3_TARGET_HEAD = 3;
+const int TEST_WINDOW3_TARGET_HEAD = 4;
 
 // Set thumbnail width for all window thumbnails
 const int THUMBNAIL_WIDTH = int(160*1.5);
