@@ -253,8 +253,19 @@ State fam_handler
         void setup_channels()
         {
             this.scaling_all = 0;
-            this.scaling[REAR_LEFT] = sound_settings::PLAYBACK_SCALING_VOLUME;
-            this.scaling[REAR_RIGHT] = sound_settings::PLAYBACK_SCALING_VOLUME;
+
+            if(item.sound_direction & FRONT_SIDE)
+            {
+                 this.scaling[FRONT_RIGHT] = sound_settings::PLAYBACK_SCALING_VOLUME;
+                 this.scaling[FRONT_LEFT] = sound_settings::PLAYBACK_SCALING_VOLUME;
+            }
+
+            if(item.sound_direction & LEFT_SIDE)
+                this.scaling[REAR_LEFT] = sound_settings::PLAYBACK_SCALING_VOLUME;
+
+            if(item.sound_direction & RIGHT_SIDE)
+                this.scaling[REAR_RIGHT] = sound_settings::PLAYBACK_SCALING_VOLUME;
+
         }
 
         void play(time tstart)
