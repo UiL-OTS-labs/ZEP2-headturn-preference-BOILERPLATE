@@ -114,37 +114,10 @@ State fam_handler
     {
         on_event:entry()
         {
-            set_pseudorandom_light_position();
+            lightpos = item.sound_direction;
 
             stop_light(FRONT_SIDE);
             start_light(lightpos);
-        }
-
-        // set the next lightposition pseudorandom (limit max repeats on one side)
-        void set_pseudorandom_light_position()
-        {
-
-            // Determine by chance the next side
-            Direction next_lightpos;
-            if (random(1000) >= 500)
-                next_lightpos = RIGHT_SIDE;
-            else
-                next_lightpos = LEFT_SIDE;
-
-            if( ( leftsidecount - rightsidecount ) > MAX_SAME_SIDE ) // force right side
-                next_lightpos = RIGHT_SIDE;
-
-            if( ( rightsidecount - leftsidecount ) > MAX_SAME_SIDE ) // force left side
-                next_lightpos = LEFT_SIDE;
-
-            // Increment counter if it's a repeat of the side
-            if(next_lightpos & RIGHT_SIDE) // counter of a repeat of a side.
-                rightsidecount++;
-            if(next_lightpos & LEFT_SIDE) // counter of a repeat of a side.
-                leftsidecount++;
-
-            //set the new lightpos
-            lightpos =  next_lightpos;
         }
 
         on_event:message()
@@ -239,13 +212,13 @@ State fam_handler
         on_event:start()
         {
             signal(fam_handler, AUDIO_START);
-            control.show_speaker_icon(LEFT_SIDE | RIGHT_SIDE);
+            control.show_speaker_icon(lightpos);
         }
 
 
         on_event:finish()
         {
-            control.hide_speaker_icon(LEFT_SIDE | RIGHT_SIDE);
+            control.hide_speaker_icon(lightpos);
             control.update_clock(event_time);
             done(CONTINUE);
         }
