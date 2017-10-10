@@ -353,9 +353,7 @@ State test_handler
 
         // Update status line on control window. Cleared in done() above.
         control.set_status(
-            string(item.id) + "  " +
-            string(item.type) + "  " +
-            item.sndfn  + "  " +
+            "id: " + string(item.id) + "  direction: " +
             item.sound_direction);
 
 
