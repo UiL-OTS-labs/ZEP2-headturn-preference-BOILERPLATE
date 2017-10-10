@@ -24,6 +24,7 @@ record FamOutput
     int         lt;             // looking time [ms]
     int         nlt;            // not looking time [ms]
     int         lookaways;      // number of times looked away
+    int         number_of_repeats; //number of times the training phase was repeated
 }
 
 
@@ -49,6 +50,9 @@ void fam_output_append(FamOutput data)
 
     expdb.set_trial_data_int_field("lookaways", data.lookaways,
         "number of times looked away");
+
+    expdb.set_trial_data_int_field("number_of_repeats", data.number_of_repeats,
+        "number of times the training phase was repeated");
 }
 
 

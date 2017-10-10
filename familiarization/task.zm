@@ -57,6 +57,7 @@ Block task
             output.nlt =
                 int(control.clock.total_runtime - control.clock.duration);
             output.lookaways = (control.clock.timestamps.size - 1) / 2;
+            output.number_of_repeats = repeat_option.number_of_repeats;
             fam_output_append(output);
 
             // Also save look/no-look durations.
@@ -96,10 +97,15 @@ Block task
 
     TransientPart repeat_option
     {
+        int number_of_repeats;
+
         on_event:entry()
         {
             if(repeat_query_page.repeat_flag)
+            {
                 familiarization.enter();
+                number_of_repeats++;
+            }
         }
     }
 }
