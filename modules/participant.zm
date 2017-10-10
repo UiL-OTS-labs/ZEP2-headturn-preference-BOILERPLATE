@@ -1,0 +1,39 @@
+/******************************************************************************\
+FILE:           participant.zm
+AUTHOR:         Theo Veenker <theo.veenker@beexy.nl>
+ADAPTED BY:     -
+
+DESCRIPTION:
+
+Participant record preparation:
+- creation of participant record fields (i.e. attributes)
+- checking participant record fields
+
+\******************************************************************************/
+
+// Creates participant record fields, if applicable. All fields added must have
+// a definition in attributes.zm. This function will only be called when running
+// the script with plain Zep on the command line.
+int create_participant_fields()
+{
+    expdb.participant.add_field("gender");
+    expdb.participant.add_field("birthdate");
+    expdb.participant.add_field("order");
+
+    return OK;
+}
+
+
+// Checks value of required participant record fields, if applicable.
+int check_participant_fields()
+{
+    if (expdb.participant.get_enum_field("gender") == "") return ERROR;
+    if (expdb.participant.get_date_field("birthdate") < 1900-01-01) return ERROR;
+    if (expdb.participant.get_date_field("birthdate") >= now()) return ERROR;
+    if (
+        expdb.participant.get_int_field("order") < 1 ||
+        expdb.participant.get_int_field("order") > 4
+        ) return ERROR;
+
+    return OK;
+}

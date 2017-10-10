@@ -1510,9 +1510,7 @@ Page control
             check_in_researcher();
             check_in_experiment();
             ctrl_window.show_error("One or more participant record attributes "
-                "not set.\n\n"
-                "Add required fields in <b>create_participant_fields()</b>\n"
-                "in <tt>modules/participant.zm</tt>.", true);
+                "not set.", true);
             return ERROR;
         }
         err = check_participant_fields();
