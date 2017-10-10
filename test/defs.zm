@@ -19,7 +19,7 @@ HISTORY:
 const int       MAX_SAME_SIDE                   = 2;
 
 // Maximum number of subtrials in test trials.
-const int       MAX_TEST_SUBTRIALS              = 15;
+const int       MAX_TEST_SUBTRIALS              = 1;
 
 // Maximum duration the child may look away.
 const dur       MAX_LOOKAWAY_DURATION           = 2000ms;
