@@ -98,7 +98,7 @@ void bootstrap_stimulus_lists()
     err += familiarization::shuffle_stimulus_list();
 
     // Read Test stimuli list
-    err += read_stimuli_list(test::test_items, "test_items_order_1.csv");
+    err += read_stimuli_list(test::test_items, "test_items_order_" + expdb.participant.get_int_field("order") + ".csv");
 
     // Check the test list
     err += check_stimuli_list(test::test_items);
