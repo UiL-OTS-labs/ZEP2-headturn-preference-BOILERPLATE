@@ -1,0 +1,90 @@
+/******************************************************************************\
+FILE:           colors.zm
+AUTHOR:         Theo Veenker <theo.veenker@beexy.nl>
+ADAPTED BY:     -
+
+DESCRIPTION:
+
+Defines default colors for various graphic elements.
+
+For a list of predefined Zep color names see:
+  http://www.beexy.nl/zep -> Reference Manuals -> Color Names
+
+\******************************************************************************/
+
+
+// Colors used on test pages.
+const color     TEST_PAGE_COLOR                 = color:black;
+const color     TEST_PAGE_STIMULUS_COLOR        = color:white;
+const color     TEST_PAGE_STIMULUS_TEXT_COLOR   = color:black;
+const color     TEST_PAGE_MESSAGE_COLOR         = color:white;
+const color     TEST_PAGE_MESSAGE_TEXT_COLOR    = color:black;
+const color     TEST_PAGE_PROMPT_COLOR          = color:none;
+const color     TEST_PAGE_PROMPT_TEXT_COLOR     = color:gray60;
+const color     TEST_PAGE_LABEL_COLOR           = color:none;
+const color     TEST_PAGE_LABEL_TEXT_COLOR      = color:gray60;
+//const color     TEST_PAGE_BUTTON_COLOR          = color:gray10;
+const color     TEST_PAGE_BUTTON_COLOR          = color:lightsteelblue;
+const color     TEST_PAGE_BUTTON_TEXT_COLOR     = color:gray80;
+//const color     TEST_PAGE_INPUT_COLOR           = color:white;
+const color     TEST_PAGE_INPUT_COLOR           = rgb:FFF0F0;   // pale pink
+const color     TEST_PAGE_INPUT_TEXT_COLOR      = color:black;
+const color     TEST_PAGE_CHECK_BOX_COLOR       = color:white;
+const color     TEST_PAGE_STATUS_COLOR          = color:white;
+const color     TEST_PAGE_STATUS_TEXT_COLOR     = color:black;
+const color     TEST_PAGE_STATUS_BAR_COLOR      = color:lightsteelblue;
+
+
+// Colors used on standard modules entry_page and exit_page.
+const color     ENTRY_PAGE_COLOR                = color:lightyellow;
+const color     ENTRY_PAGE_TEXT_COLOR           = color:cornflowerblue;
+
+
+// Colors used on standard module pause_page.
+const color     INFO_PAGE_COLOR                 = color:lightyellow;
+const color     INFO_PAGE_MESSAGE_COLOR         = color:white;
+const color     INFO_PAGE_MESSAGE_TEXT_COLOR    = color:black;
+//const color     INFO_PAGE_BUTTON_COLOR          = color:gray10;
+const color     INFO_PAGE_BUTTON_COLOR          = color:lightsteelblue;
+const color     INFO_PAGE_BUTTON_TEXT_COLOR     = color:gray80;
+
+
+// Colors used on standard module text_page.
+const color     TEXT_PAGE_COLOR                 = color:gray10;
+const color     TEXT_PAGE_MESSAGE_COLOR         = color:none;
+const color     TEXT_PAGE_MESSAGE_TEXT_COLOR    = color:black;
+
+
+// Colors used on standard module prompt_page.
+const color     PROMPT_PAGE_COLOR               = color:gray10;
+const color     PROMPT_PAGE_MESSAGE_COLOR       = color:white;
+const color     PROMPT_PAGE_MESSAGE_TEXT_COLOR  = color:black;
+const color     PROMPT_PAGE_CAPTION_COLOR       = color:none;
+const color     PROMPT_PAGE_CAPTION_TEXT_COLOR  = color:gray60;
+
+
+// Colors used on standard module image_page.
+const color     IMAGE_PAGE_COLOR                = color:gray10;
+
+
+// Colors used on standard modules anim_page*.
+const color     ANIM_PAGE_COLOR                 = color:gray10;
+
+
+// Colors used on standard modules input_page, choose_page, check_page.
+const color     INPUT_PAGE_COLOR                = color:gray10;
+const color     INPUT_PAGE_MESSAGE_COLOR        = color:white;
+const color     INPUT_PAGE_MESSAGE_TEXT_COLOR   = color:black;
+const color     INPUT_PAGE_LABEL_COLOR          = color:none;
+const color     INPUT_PAGE_LABEL_TEXT_COLOR     = color:gray60;
+//const color     INPUT_PAGE_BUTTON_COLOR         = color:gray10;
+const color     INPUT_PAGE_BUTTON_COLOR         = color:lightsteelblue;
+const color     INPUT_PAGE_BUTTON_TEXT_COLOR    = color:gray80;
+//const color     INPUT_PAGE_INPUT_COLOR          = color:white;
+const color     INPUT_PAGE_INPUT_COLOR          = rgb:FFF0F0;   // pale pink
+const color     INPUT_PAGE_INPUT_TEXT_COLOR     = color:black;
+const color     INPUT_PAGE_CHECK_BOX_COLOR      = color:white;
+
+
+// Window color. Used only if no page displayed.
+const color     WINDOW_COLOR                    = color:black;
