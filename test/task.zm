@@ -25,7 +25,6 @@ HISTORY:
 
 import defs;
 import stimuli;
-import shuffle;
 import output;
 import test_handler;
 
@@ -75,7 +74,7 @@ Block task
                 TestOutput output;
                 output.trialnum = test.cycle + 1;
                 output.id = item.id;
-                output.type = item.type;
+                output.type = item.trial_type;
                 output.snd_direction = test_handler.lightpos;
                 output.sndfn = item.sndfn;
                 output.lt = int(control.clock.duration);

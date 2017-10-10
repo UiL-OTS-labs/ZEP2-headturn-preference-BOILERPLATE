@@ -21,16 +21,17 @@ plugin zep_file;
 // Symbolic definition of item type.
 enum ItemType
 {
-    FAMIL,                        // familiar item
-    NOVEL,                        // novel item
+    ADS,                        // familiar item
+    IDS,                        // novel item
+    training,
 }
 
 
 // Item table record.
 record TestItem
 {
-    int                         id;             // item id
-    stimuli::ItemType           type;           // item type
+    int                         id;      // item trial_num
+    stimuli::ItemType           trial_type;           // item type
     string                      sndfn;          // stimulus sound file
     baby_control::Direction     sound_direction; // direction the sounds come from
 }
@@ -97,13 +98,10 @@ void bootstrap_stimulus_lists()
     err += familiarization::shuffle_stimulus_list();
 
     // Read Test stimuli list
-    err += read_stimuli_list(test::test_items, "test_items.csv");
+    err += read_stimuli_list(test::test_items, "test_items_order_1.csv");
 
     // Check the test list
     err += check_stimuli_list(test::test_items);
-
-    // Shuffle the list
-    err += test::shuffle_stimulus_list();
 
     if(err != 0 || error())
     {
