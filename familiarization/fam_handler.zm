@@ -26,7 +26,8 @@ enum TestEvent {
     RESPONSE_GO,
     RESPONSE_HALT,
     AUDIO_START,
-    AUDIO_FINISH
+    AUDIO_FINISH,
+    TRAINING_REPEAT,
 }
 
 

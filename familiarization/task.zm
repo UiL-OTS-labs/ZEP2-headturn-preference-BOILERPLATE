@@ -27,6 +27,8 @@ import stimuli;
 import shuffle;
 import output;
 import fam_handler;
+import std_blank_page;
+import repeat_query_page;
 
 // Familiarization item table.
 TestItem[..] fam_items;
@@ -36,7 +38,6 @@ Block task
     Block familiarization
     {
         TestItem    item;           // current item
-
 
         on_event:entry()
         {
@@ -77,6 +78,28 @@ Block task
                 // auditory stimuli.
                 fam_handler.action(this, item, reference_time);
             }
+        }
+    }
+
+    Part repeat_query
+    {
+        on_event:entry()
+        {
+            blank_page.action(null, 2s);
+            repeat_query_page.action(this,
+                "<b>Should the training phase be repeated?</b>\n\n"
+                "Press the <i>middle</i> button (or space) to <u>repeat</u> training.\n\n"
+                "Press any <i>other</i> button/key other to <u>continue</u> to test."
+            );
+        }
+    }
+
+    TransientPart repeat_option
+    {
+        on_event:entry()
+        {
+            if(repeat_query_page.repeat_flag)
+                familiarization.enter();
         }
     }
 }

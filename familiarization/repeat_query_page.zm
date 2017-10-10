@@ -1,0 +1,101 @@
+Page repeat_query_page
+{
+    bool repeat_flag;
+
+    on_event:close()
+    {
+        done();
+    }
+
+
+    on_event:key_press()
+    {
+        if(input_key == ' ')
+            repeat_flag = true;
+        done();
+    }
+
+    on_event:message()
+    {
+        if(message_sender == control && message_arg == TRAINING_REPEAT)
+            repeat_flag = true;
+        done();
+    }
+
+
+    VerticalLayout layout
+    {
+        init()
+        {
+            left_margin = 10;
+            right_margin = 10;
+            top_margin = 10;
+            bottom_margin = 10;
+            spacing = 20;
+            options =
+                LAYOUT_STRETCH_ITEMS |
+                LAYOUT_ATTACH_LEFT |
+                LAYOUT_ATTACH_RIGHT;
+            fill_pattern_color = CONTROL_COLOR;
+        }
+
+
+        LabelGadget message
+        {
+            init()
+            {
+                font_family = CONTROL_INFO_FONT_FAMILY;
+                font_size = CONTROL_INFO_FONT_SIZE;
+                fill_pattern_color = CONTROL_MESSAGE_COLOR;
+                text_color = CONTROL_MESSAGE_TEXT_COLOR;
+                is_wrapping = false;
+                hor_alignment = ALIGN_BEGIN;
+                ver_alignment = ALIGN_BEGIN;
+                margin = 10;
+                border = 2;
+                border_style = BORDER_RIDGE;
+            }
+        }
+    }
+
+
+    void done()
+    {
+        signal(target, CONTINUE);
+        ctrl_window.msgbox.hide();
+        ctrl_window.msgbox.drop_page();
+        if(control.target == this)
+        {
+            control.target = null;
+        }
+    }
+
+
+    //======================================================================
+
+
+    void action(Object caller, string msg, bool markup = true)
+    {
+        // just so we know who to call to CONTINUE
+        this.target = caller;
+
+        //reset flag
+        repeat_flag = false;
+
+        // Enable response box buttons and fallback keyboard keys.
+        control.target = this;
+        control.disable_buttons();
+        control.disable_keys();
+        control.enable_button(test::BUTTON_GO, CONTINUE);
+        control.enable_button(test::BUTTON_HALT, CONTINUE);
+        control.enable_button(test::BUTTON_REPEAT, TRAINING_REPEAT);
+
+        if (markup) layout.message.fancy_text = msg;
+        else layout.message.text = msg;
+
+        ctrl_window.msgbox.show_page(this);
+        ctrl_window.prepare_dialog(ctrl_window.msgbox, "Query", preferred_width, preferred_height);
+        ctrl_window.msgbox.show();
+        ctrl_window.msgbox.activate();
+    }
+}

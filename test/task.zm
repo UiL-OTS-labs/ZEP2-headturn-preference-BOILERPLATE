@@ -29,8 +29,9 @@ import output;
 import test_handler;
 
 
-const int   BUTTON_GO    = 2;
-const int   BUTTON_HALT  = 0;
+const int BUTTON_GO     = 2;
+const int BUTTON_HALT   = 0;
+const int BUTTON_REPEAT = 1;
 
 // Test item table.
 TestItem[..] test_items;
