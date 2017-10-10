@@ -116,7 +116,7 @@ State fam_handler
         {
             lightpos = item.sound_direction;
 
-            stop_light(FRONT_SIDE);
+            stop_light(FRONT_SIDE | RIGHT_SIDE | LEFT_SIDE);
             start_light(lightpos);
         }
 
@@ -212,7 +212,12 @@ State fam_handler
         on_event:start()
         {
             signal(fam_handler, AUDIO_START);
+            lightpos = item.sound_direction;
+
             control.show_speaker_icon(lightpos);
+
+            stop_light(FRONT_SIDE | RIGHT_SIDE | LEFT_SIDE);
+            start_light(lightpos);
         }
 
 
