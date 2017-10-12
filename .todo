@@ -1,0 +1,4 @@
+5. Should likely equate the training and test phase in logic code (same output and behaviour etc).
+6. Output and input should be changed to easily suit the needs of manybabies data-processing (see the trials data template for some of the details).
+7. No subtrials, only a single run of the stimuli.
+8. Audio needs to be scaled in software. Bloody hell. It’s like 91 dB SPL on reference...
