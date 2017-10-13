@@ -24,7 +24,6 @@ HISTORY:
 
 import defs;
 import stimuli;
-import shuffle;
 import output;
 import fam_handler;
 import std_blank_page;
@@ -51,19 +50,19 @@ Block task
         {
             fam_handler.cleanup(event_time);
 
-            // Add new row to output table.
-            FamOutput output;
-            output.lt = int(control.clock.duration);
-            output.nlt =
-                int(control.clock.total_runtime - control.clock.duration);
-            output.lookaways = (control.clock.timestamps.size - 1) / 2;
-            output.number_of_repeats = repeat_option.number_of_repeats;
-            fam_output_append(output);
-
-            // Also save look/no-look durations.
-            looknolook_output_append(0);
-
-            save_trial_data();
+            // // Add new row to output table.
+            // FamOutput output;
+            // output.lt = int(control.clock.duration);
+            // output.nlt =
+            //     int(control.clock.total_runtime - control.clock.duration);
+            // output.lookaways = (control.clock.timestamps.size - 1) / 2;
+            // output.number_of_repeats = repeat_option.number_of_repeats;
+            // fam_output_append(output);
+            //
+            // // Also save look/no-look durations.
+            // looknolook_output_append(0);
+            //
+            // save_trial_data();
         }
 
 

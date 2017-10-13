@@ -1,0 +1,4 @@
+# Training items 1
+id;trial_type;sndfn;sound_direction
+-2;training;training.wav;RIGHT_SIDE
+-1;training;training.wav;LEFT_SIDE

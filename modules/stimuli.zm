@@ -89,16 +89,19 @@ void bootstrap_stimulus_lists()
     int err = 0;
 
     // Read familiarization stimuli list
-    err += read_stimuli_list(familiarization::fam_items, "familiarization_items.csv");
+    err += read_stimuli_list(familiarization::fam_items,
+        "training_items_order_"
+        + expdb.participant.get_int_field("order")
+        + ".csv");
 
     // Check the familiarization list
     err += check_stimuli_list(familiarization::fam_items);
 
-    // Shuffle the list
-    err += familiarization::shuffle_stimulus_list();
-
     // Read Test stimuli list
-    err += read_stimuli_list(test::test_items, "test_items_order_" + expdb.participant.get_int_field("order") + ".csv");
+    err += read_stimuli_list(test::test_items,
+        "test_items_order_"
+        + expdb.participant.get_int_field("order")
+        + ".csv");
 
     // Check the test list
     err += check_stimuli_list(test::test_items);
