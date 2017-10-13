@@ -1,0 +1,117 @@
+/******************************************************************************\
+FILE:           output.zm
+AUTHOR:         Theo Veenker <theo.veenker@beexy.nl>
+ADAPTED BY:     -
+
+DESCRIPTION:
+
+Defines the formats of output table(s).
+
+
+HISTORY:
+2012-02-20 TV   Created.
+2017-05-26 TV   Adapted for Zep 2.0.
+2017-10-12 CvR  Adapted for Manybabies experiment
+
+\******************************************************************************/
+
+
+// Test output table record. If you change this then also update
+// corresponding output function below and rerun the experiment (once)
+// in PREPARING mode, or alternatively manually make the required changes
+// to the table column definitions using ZepMan.
+record SummaryTrialOutput
+{
+    string      trial_type; // trial number
+    string      stimulus;
+    int         trial_num;
+
+    real        looking_time; // looking time [s]
+    real        not_looking_time; // not looking time [s]
+    real        total_trial_time; // total trial time [s]
+
+    int         lookaways; // number of times looked away
+
+    string   snd_direction; // stimulus direction
+}
+
+// Appends one row of data to test output table.
+void trial_summary_output_append(SummaryTrialOutput data)
+{
+    // Create new trial data record. The title (final argument) is optional
+    // but recommended.
+    expdb.add_trial_data_record("manybabies", "1",
+        "Test results");
+
+    // Set column values of the trial data record. The descriptions (final
+    // arguments) are optional but recommended.
+
+    expdb.set_trial_data_string_field("trial_type", data.trial_type,
+    "`IDS`, `ADS`, and `training`");
+
+    expdb.set_trial_data_string_field("stimulus", data.stimulus,
+    "`training`, `IDSx` or `ADSx` - the actual sound file that was playing");
+
+    expdb.set_trial_data_int_field("trial_num", data.trial_num,
+        "trial number, from 1 -- 16 (with -2 and -1 denoting training trials)");
+
+    expdb.set_trial_data_real_field("looking_time", data.looking_time,
+        "looking time in seconds, to at least 2 decimal places."
+        "If a trial was not conducted because the experiment ended early,"
+        " enter NC (data not collected)");
+
+    expdb.set_trial_data_real_field("not_looking_time", data.not_looking_time,
+        "not looking time in seconds, to at least 2 decimal places.");
+
+    expdb.set_trial_data_real_field("total_trial_time", data.total_trial_time,
+    "total length of the trial from initiation of the sound stimulus to the end"
+    "of the 2 second look-away time or trial end. For non-contingent protocols,"
+    " this will be 18 s for every trial (unless the trial was not "
+    "presented/experiment terminated early");
+
+    expdb.set_trial_data_int_field("looksaways", data.lookaways,
+        "Number of not look epochs");
+
+    expdb.set_trial_data_string_field("sound_direction", data.snd_direction,
+        "Direction the sound was played from.");
+}
+
+record SingleEpochOutput
+{
+    string      trial_type; // trial number
+    string      stimulus;
+    int         trial_num;
+
+    real        duration; // seconds
+
+    string      epoch_type; // LOOKING / NOTLOOKING
+
+    string      snd_direction; // stimulus direction
+}
+
+// Appends array of looking/not-looking times to look-nolook output table.
+void looknolook_output_append(SingleEpochOutput data)
+{
+        // Create new trial data record. The title (final argument) is optional
+        // but recommended.
+        expdb.add_trial_data_record("manybabies", "2",
+            "Looking/not-looking results");
+
+        expdb.set_trial_data_string_field("trial_type", data.trial_type,
+        "`IDS`, `ADS`, and `training`");
+
+        expdb.set_trial_data_string_field("stimulus", data.stimulus,
+        "`training`, `IDSx` or `ADSx` - the actual sound file that was playing");
+
+        expdb.set_trial_data_int_field("trial_num", data.trial_num,
+            "trial number, from 1 -- 16 (with -2 and -1 denoting training trials)");
+
+        expdb.set_trial_data_real_field("duration",  data.duration,
+            "duration (looking or not looking) in seconds");
+
+        expdb.set_trial_data_string_field("epoch_type", data.epoch_type,
+            "if it concerns LOOKING or NOTLOOKING");
+
+        expdb.set_trial_data_string_field("sound_direction", data.snd_direction,
+            "Direction the sound was played from.");
+}

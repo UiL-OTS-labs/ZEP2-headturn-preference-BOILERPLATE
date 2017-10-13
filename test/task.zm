@@ -48,13 +48,6 @@ Block task
             num_cycles = test_items.size;
         }
 
-
-        on_event:exit()
-        {
-            save_trial_data();
-        }
-
-
         Trial trial
         {
             on_event:entry()
@@ -66,34 +59,71 @@ Block task
                 test_handler.setup();
             }
 
+            real dur_to_seconds(dur d)
+            {
+                return real(d)/1000;
+            }
 
             on_event:exit()
             {
-                test_handler.cleanup(event_time);
+                test_handler.cleanup(event_time); // Do this BEFORE output gen.
 
-                // Add new row to output table.
-                TestOutput output;
-                output.trialnum = test.cycle + 1;
-                output.id = item.id;
-                output.type = item.trial_type;
-                output.snd_direction = test_handler.lightpos;
-                output.sndfn = item.sndfn;
-                output.lt = int(control.clock.duration);
-                output.nlt =
-                    int(control.clock.total_runtime - control.clock.duration);
-                output.lookaways = (control.clock.timestamps.size - 1) / 2;
+                // // Add new row to output table.
+                SummaryTrialOutput trial_output;
 
-                test_output_append(output);
+                trial_output.trial_type       = string(item.trial_type);
+                trial_output.stimulus         = substring(item.sndfn, 0, item.sndfn.length-4);
 
-                // Also save look/no-look durations.
-                looknolook_output_append(output);
+                trial_output.trial_num        = item.id;
+
+                trial_output.looking_time     = dur_to_seconds(control.clock.duration);
+
+                trial_output.total_trial_time = dur_to_seconds(control.clock.total_runtime);
+                trial_output.not_looking_time = dur_to_seconds(control.clock.total_runtime - control.clock.duration);
+
+                trial_output.lookaways        = (control.clock.timestamps.size - 1) / 2;
+
+                trial_output.snd_direction    = string(test_handler.lightpos);
+
+                trial_summary_output_append(trial_output);
+
+                // // Also save look/no-look durations.
+
+                int nstamps = control.clock.timestamps.size - 1;
+
+                int index;
+                while (index < nstamps)
+                {
+                    time lasttimestamp = control.clock.timestamps[index];
+                    SingleEpochOutput epoch_output;
+
+                    epoch_output.trial_type    = trial_output.trial_type;
+                    epoch_output.stimulus      = trial_output.stimulus;
+                    epoch_output.trial_num     = trial_output.trial_num;
+
+                    epoch_output.duration      = dur_to_seconds(control.clock.timestamps[index+1] - lasttimestamp); // seconds
+
+                    epoch_output.epoch_type    = (index & 1) ? "NOTLOOKING" : "LOOKING";
+
+                    epoch_output.snd_direction = trial_output.snd_direction;
+
+                    looknolook_output_append(epoch_output);
+
+                    index++;
+                }
+
+                save_trial_data();
             }
 
 
             SubTrial subtrial
             {
+                // flag to easily check if last time we left because of timeout.
+                bool leave_because_lookaway;
+
                 on_event:entry()
                 {
+                    leave_because_lookaway = false;
                     test_handler.action(this, item, reference_time);
                 }
 
@@ -101,7 +131,10 @@ Block task
                 on_event:message()
                 {
                     if (message_arg == TIMEOUT)
+                    {
                         trial.leave();
+                        leave_because_lookaway = true;
+                    }
                     else
                         leave();
                 }
