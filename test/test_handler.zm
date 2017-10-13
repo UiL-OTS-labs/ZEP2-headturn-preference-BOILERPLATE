@@ -137,10 +137,10 @@ State test_handler
             else
                 next_lightpos = LEFT_SIDE;
 
-            if( ( leftsidecount - rightsidecount ) > MAX_SAME_SIDE ) // force right side
+            if( ( leftsidecount - rightsidecount ) >= MAX_SAME_SIDE ) // force right side
                 next_lightpos = RIGHT_SIDE;
 
-            if( ( rightsidecount - leftsidecount ) > MAX_SAME_SIDE ) // force left side
+            if( ( rightsidecount - leftsidecount ) >= MAX_SAME_SIDE ) // force left side
                 next_lightpos = LEFT_SIDE;
 
             // Increment counter if it's a repeat of the side
