@@ -17,7 +17,7 @@ const int PLAYBACK_NUM_CHANNELS       = 4;
 const SampleRate PLAYBACK_SAMPLE_RATE = RATE_44100;
 const dur PLAYBACK_LATENCY            = 0ms; // 0 means default
 const int PLAYBACK_DEVICE_ID          = -1; // -1 means default (use zepsndinfo)
-const real PLAYBACK_SCALING_VOLUME    = 1.0;
+const real PLAYBACK_SCALING_VOLUME    = 0.6;
 
 // Settings used for default (first) capture device.
 const int       CAPTURE_NUM_CHANNELS            = 2;
