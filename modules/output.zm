@@ -15,7 +15,6 @@ HISTORY:
 
 \******************************************************************************/
 
-
 // Test output table record. If you change this then also update
 // corresponding output function below and rerun the experiment (once)
 // in PREPARING mode, or alternatively manually make the required changes
@@ -33,6 +32,32 @@ record SummaryTrialOutput
     int         lookaways; // number of times looked away
 
     string   snd_direction; // stimulus direction
+}
+
+real dur_to_seconds(dur d)
+{
+    return real(d)/1000;
+}
+
+// picks the data from the right location and generates it.
+SummaryTrialOutput generate_summary(TestItem item, Direction sound_direction)
+{
+    SummaryTrialOutput trial_output;
+    trial_output.trial_type       = string(item.trial_type);
+    trial_output.stimulus         = substring(item.sndfn, 0, item.sndfn.length-4);
+
+    trial_output.trial_num        = item.id;
+
+    trial_output.looking_time     = dur_to_seconds(control.clock.duration);
+
+    trial_output.total_trial_time = dur_to_seconds(control.clock.total_runtime);
+    trial_output.not_looking_time = dur_to_seconds(control.clock.total_runtime - control.clock.duration);
+
+    trial_output.lookaways        = (control.clock.timestamps.size - 1) / 2;
+
+    trial_output.snd_direction    = string(sound_direction);
+
+    return trial_output;
 }
 
 // Appends one row of data to test output table.

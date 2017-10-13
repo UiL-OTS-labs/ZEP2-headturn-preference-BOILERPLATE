@@ -41,30 +41,7 @@ Block task
         on_event:entry()
         {
             num_cycles = fam_items.size;
-
-            fam_handler.setup();
         }
-
-
-        on_event:exit()
-        {
-            fam_handler.cleanup(event_time);
-
-            // // Add new row to output table.
-            // FamOutput output;
-            // output.lt = int(control.clock.duration);
-            // output.nlt =
-            //     int(control.clock.total_runtime - control.clock.duration);
-            // output.lookaways = (control.clock.timestamps.size - 1) / 2;
-            // output.number_of_repeats = repeat_option.number_of_repeats;
-            // fam_output_append(output);
-            //
-            // // Also save look/no-look durations.
-            // looknolook_output_append(0);
-            //
-            // save_trial_data();
-        }
-
 
         Trial trial
         {
@@ -72,11 +49,45 @@ Block task
             {
                 item = fam_items[familiarization.cycle];
 
-                // A familiarization trial is the presentation of one
-                // stimulus. The contingency procedure for the lights
-                // starts at trial 1 and runs independently from the
-                // auditory stimuli.
+                fam_handler.setup();
+
                 fam_handler.action(this, item, reference_time);
+            }
+
+            on_event:exit()
+            {
+                fam_handler.cleanup(event_time);
+
+                // Add new row to output table.
+                SummaryTrialOutput trial_output = generate_summary(item, fam_handler.lightpos);
+                trial_summary_output_append(trial_output);
+
+                // // Also save look/no-look durations.
+
+                int nstamps = control.clock.timestamps.size - 1;
+
+                int index;
+                while (index < nstamps)
+                {
+                    time lasttimestamp = control.clock.timestamps[index];
+                    SingleEpochOutput epoch_output;
+
+                    epoch_output.trial_type    = trial_output.trial_type;
+                    epoch_output.stimulus      = trial_output.stimulus;
+                    epoch_output.trial_num     = trial_output.trial_num;
+
+                    epoch_output.duration      = dur_to_seconds(control.clock.timestamps[index+1] - lasttimestamp); // seconds
+
+                    epoch_output.epoch_type    = (index & 1) ? "NOTLOOKING" : "LOOKING";
+
+                    epoch_output.snd_direction = trial_output.snd_direction;
+
+                    looknolook_output_append(epoch_output);
+
+                    index++;
+                }
+
+                save_trial_data();
             }
         }
     }
