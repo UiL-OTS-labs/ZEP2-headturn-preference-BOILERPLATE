@@ -1,9 +1,12 @@
-# Head-turn Preference Procedure
-You can find the source-code for this experiment at
-[GitHub](https://github.com/UiL-OTS-labs/ZEP2-headturn-preference-BOILERPLATE).
+# Head-turn Preference Procedure (Manyababies 1 implementation)
+You can find the source code for this experiment at
+[GitHub](https://github.com/UiL-OTS-labs/ZEP2-headturn-preference-BOILERPLATE/tree/implementation/manybabies1).
 *   Originally authored by: [Theo Veenker](theo.veenker@beexy.nl)
-*   Adapted by: [Chris van Run](C.P.A.vanrun@uu.nl)
-*   For client: [Maartje de Klerk](https://www.uu.nl/medewerkers/MdeKlerk/0)
+*   Adapted by (heavily): [Chris van Run](C.P.A.vanrun@uu.nl)
+*   For clients:
+    *   [Maartje de Klerk](https://www.uu.nl/medewerkers/MdeKlerk/0)
+    *   [Caroline Junge](https://www.uu.nl/staff/CMMJunge/0)
+
 
 ## Description:
 Purpose of this ZEP-based experiment is to see whether an infant participant can
@@ -25,6 +28,11 @@ presented.
 The researcher indicates a look start by pressing the `RETURN` key and a look
 end by pressing the `ESCAPE`. This can alternatively be done via the BeexyBox B.
 
+## Implementation details
+This version of the HPP experiment has been adapted to suit the requirements of
+the [manyababies 1 experiment](http://manybabies.stanford.edu/).
+
+
 ## Output
 In this implementation the front and side lights will be presented via three
 computer monitors. Therefore this implementation requires a quad head videocard.
@@ -33,24 +41,16 @@ The familiarization-items presentation order is random. The test-items order is
 pseudorandomized such that there are never more than two of novel-type items
 (NOVEL) or familiar-type items (FAMIL) that appear in sequence.
 
-Generate output in comma-separated files by running `zepdb2extract`.
+Generate output in comma-separated files by running `zepdb2extract`. See the usage
+description on how to use zepdb2exact (`zepdb2extract -h`).
 
-Output familiarization phase:
-*   *Table 1*: looking time, not looking time, number of look aways (summary).
-*   *Table 2*: individual looking and no-looking epochs without stimuli details.
-
-Output test phase:
+Output tables:
 *   *Table 1*: stimuli details, looking time, not looking time, number of look
     aways (summary).
 *   *Table 2*: looking/no-looking epochs per trial including stimuli details and
     duration.
 
-
-
-## Preview Experiment
-Included in this repository is a preview video of a single run of the experiment.
-
-## About Zep
+## About Zep (2.0)
 For information on running the experiment and extracting the experiment
 results please go the Zep website at <http://www.beexy.nl/zep> and check
 out the documentation section. There you'll also find explanations and
@@ -66,7 +66,7 @@ stimuli lists at `stimuli/EXAMPLE.csv`
 *Edit stimuli lists*. Every line represents one experiment trial. Each variable
 separates by a semicolon (`;`).
 *   `id` is a unique reference for human convenience. `
-*   `type` is either NOVEL or FAMIL.
+*   `trial_type` adult-directed speech (ADS), infant-directed speech (IDS) or training.
 *   `sndfn` is the soundfile that plays (e.g. 'test.wav').
 *   `sound_direction` dictates which direction the sound should come from and
     should be one of the following values:
