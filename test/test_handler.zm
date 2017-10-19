@@ -38,8 +38,7 @@ State test_handler
 
     Direction   lightpos;       // which side light is presented
 
-    int         leftsidecount;
-    int         rightsidecount;
+    int         samesidecount;
 
     bool        running;        // set at first 'looking' for first trial
 
@@ -137,17 +136,14 @@ State test_handler
             else
                 next_lightpos = LEFT_SIDE;
 
-            if( ( leftsidecount - rightsidecount ) >= MAX_SAME_SIDE ) // force right side
-                next_lightpos = RIGHT_SIDE;
+            if(next_lightpos == lightpos)
+                samesidecount++;
 
-            if( ( rightsidecount - leftsidecount ) >= MAX_SAME_SIDE ) // force left side
-                next_lightpos = LEFT_SIDE;
-
-            // Increment counter if it's a repeat of the side
-            if(next_lightpos == RIGHT_SIDE) // counter of a repeat of a side.
-                rightsidecount++;
-            if(next_lightpos == LEFT_SIDE) // counter of a repeat of a side.
-                leftsidecount++;
+            if( samesidecount >= MAX_SAME_SIDE ) // force right side
+            {
+                next_lightpos = next_lightpos == LEFT_SIDE ? RIGHT_SIDE : LEFT_SIDE;
+                samesidecount = 0;
+            }
 
             //set the new lightpos
             lightpos =  next_lightpos;
