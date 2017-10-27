@@ -144,6 +144,9 @@ State fam_handler
     {
         on_event:entry()
         {
+            if(audio.paused)
+                audio.unpause_sound();
+
             control.start_clock(event_time);
         }
 
@@ -193,6 +196,7 @@ State fam_handler
     {
         on_event:expire()
         {
+            audio.pause_sound(event_time);
             fam_handler.idle.enter();
         }
     }
@@ -200,11 +204,12 @@ State fam_handler
 
     SoundPlayback audio
     {
+        bool paused;
+
         init()
         {
             num_channels = sound_settings::PLAYBACK_NUM_CHANNELS;
         }
-
 
         // Sound source/producer object.
         SoundFile clip {}
@@ -247,13 +252,34 @@ State fam_handler
 
         }
 
+        void pause_sound(time tref)
+        {
+            paused = true;
+            dur time_left = audio.expected_finish_time - tref;
+            abort();
+            control.hide_speaker_icon(lightpos);
+            clip.selection_begin = clip.file_duration - time_left;
+            clip.fade_in_duration = 5ms; // Prevents step artifacts (clicks)
+        }
+
+        void unpause_sound()
+        {
+            paused = false;
+            control.show_speaker_icon(lightpos);
+            start(now());
+        }
+
         void play(time tstart)
         {
+            paused = false;
+
             abort();
 
             device = multichannel_sound_output_device;
 
             clip.file = stimuli_dir() + "sounds/" + item.sndfn;
+            clip.selection_begin = 0s; //reset
+            clip.fade_in_duration = 0s; //reset
 
             multichannel_sound_output_device.validate_sample_rate(clip);
 
