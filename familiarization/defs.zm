@@ -21,5 +21,9 @@ const int       MAX_SAME_SIDE                   = 2;
 // Maximum duration the child may look away.
 const dur       MAX_LOOKAWAY_DURATION           = 2000ms;
 
+// Minimal exposure time of the training duration before stimuli
+// stops instead of pausing.
+const dur       MIN_EXPOSURE_DURATION           = 5s;
+
 // Duration of the interval between two subtrials.
 const dur       INTERSTIMULUS_INTERVAL          = 750ms;
