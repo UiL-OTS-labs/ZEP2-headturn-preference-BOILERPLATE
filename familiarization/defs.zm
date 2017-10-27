@@ -23,7 +23,9 @@ const dur       MAX_LOOKAWAY_DURATION           = 2000ms;
 
 // Minimal exposure time of the training duration before stimuli
 // stops instead of pausing.
-const dur       MIN_EXPOSURE_DURATION           = 5s;
+// If set to MAX_LOOKAWAY_DURATION or smaller the training will not pause but
+// always stop directly when the participant looks away long enough.
+const dur       MIN_EXPOSURE_DURATION           = MAX_LOOKAWAY_DURATION;
 
 // Duration of the interval between two subtrials.
 const dur       INTERSTIMULUS_INTERVAL          = 750ms;
