@@ -196,11 +196,24 @@ State fam_handler
     {
         on_event:expire()
         {
-            audio.pause_sound(event_time);
+            if(!sufficient_exposure_to_training_stimuli(event_time))
+                audio.pause_sound(event_time);
+            else
+            {
+                control.hide_speaker_icon(lightpos);
+                control.update_clock(event_time);
+                done(CONTINUE);
+            }
             fam_handler.idle.enter();
         }
     }
 
+    bool sufficient_exposure_to_training_stimuli(time tref)
+    {
+        dur duration_left = audio.expected_finish_time-tref;
+        dur duration_played = audio.clip.file_duration - duration_left;
+        return duration_played >= MIN_EXPOSURE_DURATION;
+    }
 
     SoundPlayback audio
     {
