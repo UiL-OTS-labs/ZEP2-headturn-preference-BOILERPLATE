@@ -77,6 +77,7 @@ Block task
                     epoch_output.trial_num     = trial_output.trial_num;
 
                     epoch_output.duration      = dur_to_seconds(control.clock.timestamps[index+1] - lasttimestamp); // seconds
+                    epoch_output.duration_ms   = int(control.clock.timestamps[index+1] - lasttimestamp);
 
                     epoch_output.epoch_type    = (index & 1) ? "NOTLOOKING" : "LOOKING";
 
